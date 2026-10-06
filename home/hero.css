@@ -8,7 +8,41 @@
 /* ============================================================
    ROOT
 ============================================================ */
-
+html,
+body {
+ overflow-x: clip;
+}
+html.is-home-hero-intro .home-hero_slider {
+ overflow: visible;
+}
+.home-hero_content {
+ opacity: 0;
+ visibility: hidden;
+}
+.home-hero_slider,
+.home-hero_track,
+.home-hero_slide {
+ will-change: transform;
+}
+.home-hero_slide:not(.is-active) {
+ filter: brightness(0.66) saturate(0.94);
+}
+.home-hero_slide.is-active {
+ filter: none;
+}
+html.is-home-hero-intro,
+html.is-home-hero-intro body {
+ overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+ .home-hero_intro {
+   display: none;
+ }
+ .home-hero_content {
+   opacity: 1;
+   visibility: visible;
+ }
+}
 .hero-ui {
   position: absolute;
   inset: 0;
