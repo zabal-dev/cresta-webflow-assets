@@ -1,0 +1,1382 @@
+/* ============================================================
+   CRESTA HERO UI
+
+   Animation visibility / transforms are controlled by GSAP.
+   All three timelines use the same progress-relative baseline.
+============================================================ */
+
+/* ============================================================
+   ROOT
+============================================================ */
+
+.hero-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-ui [data-hero-ui],
+.hero-ui [data-hero-ui] *,
+.hero-ui [data-hero-ui] *::before,
+.hero-ui [data-hero-ui] *::after {
+  box-sizing: border-box;
+}
+
+/*
+ * Each individual UI animation fills its entire slide.
+ * This gives GSAP one consistent coordinate system.
+ */
+.hero-ui [data-hero-ui] {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  font-family: inherit;
+  color: #fff;
+
+  pointer-events: none;
+}
+
+/* ============================================================
+   SHARED POSITIONING
+============================================================ */
+
+/*
+ * Existing slide progress indicator dimensions.
+ *
+ * Every animation stack begins directly above:
+ *
+ *   UI
+ *   ↓
+ *   gap
+ *   ↓
+ *   progress circle
+ *   ↓
+ *   bottom spacing
+ */
+
+.home-hero_media {
+  --hero-ui-bottom: 2.5rem;
+  --hero-ui-progress-size: 1.6rem;
+  --hero-ui-gap: 0.75rem;
+}
+
+/*
+ * ONE baseline for every animation.
+ *
+ * Do not introduce slide-specific bottom: 8%, 15%, etc.
+ */
+
+.hero-ui_automate-column,
+.hero-ui_augment-column.is-left,
+.hero-ui_augment-column.is-right,
+.hero-ui_analyze-column {
+  bottom: calc(var(--hero-ui-bottom) + var(--hero-ui-progress-size) + var(--hero-ui-gap));
+}
+
+/* ============================================================
+   SHARED MESSAGE
+============================================================ */
+
+.hero-ui_message {
+  position: relative;
+
+  width: fit-content;
+  max-width: 100%;
+}
+
+.hero-ui_message-bubble {
+  padding: 10px 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+
+  background: rgba(30, 26, 25, 0.88);
+  color: rgba(255, 255, 255, 0.92);
+
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.08);
+
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.hero-ui_message.is-agent .hero-ui_message-bubble {
+  background: rgba(247, 247, 247, 0.92);
+  color: #262626;
+
+  border-color: rgba(255, 255, 255, 0.34);
+
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.hero-ui_message-text {
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   AGENT HEADER
+============================================================ */
+
+.hero-ui_agent-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-bottom: 5px;
+}
+
+.hero-ui_agent-name {
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 500;
+
+  opacity: 0.58;
+}
+
+.hero-ui_agent-orb,
+.hero-ui_agent-avatar {
+  flex: none;
+
+  width: 13px;
+  height: 13px;
+
+  border-radius: 50%;
+}
+
+.hero-ui_agent-orb {
+  background: radial-gradient(circle at 65% 28%, #fff 0 7%, transparent 8%), linear-gradient(145deg, #7cf17c, #67e5a0 45%, #d4ef68);
+}
+
+.hero-ui_agent-avatar {
+  background: #bbb;
+}
+
+/* ============================================================
+   STATUS
+============================================================ */
+
+.hero-ui_status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  width: fit-content;
+  padding: 5px 7px;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.09);
+
+  font-size: 9px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hero-ui_message.is-agent .hero-ui_status-pill {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.hero-ui_loader {
+  flex: none;
+
+  width: 9px;
+  height: 9px;
+
+  border: 1.25px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+
+  animation: heroUiSpin 0.7s linear infinite;
+}
+
+.hero-ui_message.is-agent .hero-ui_loader,
+.hero-ui_assist-card .hero-ui_loader {
+  border-color: rgba(0, 0, 0, 0.18);
+  border-top-color: rgba(0, 0, 0, 0.72);
+}
+
+@keyframes heroUiSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hero-ui_success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: none;
+
+  width: 14px;
+  height: 14px;
+
+  border-radius: 50%;
+
+  background: #25a94f;
+  color: #fff;
+}
+
+.hero-ui_success-icon svg {
+  width: 9px;
+  height: 9px;
+}
+
+.hero-ui_divider {
+  width: 100%;
+  height: 1px;
+
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ============================================================
+   AUTOMATE
+============================================================ */
+
+.hero-ui_automate {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * Automate animation canvas.
+ *
+ * All messages originate at bottom: 0 inside this canvas.
+ * GSAP pushes previous messages upward.
+ */
+
+.hero-ui_automate-column {
+  position: absolute;
+
+  right: 3.5%;
+
+  width: 27%;
+  max-width: 315px;
+  height: 50%;
+
+  transform: scale(1.15);
+  transform-origin: right bottom;
+}
+
+.hero-ui_automate .hero-ui_message {
+  position: absolute;
+
+  right: 0;
+  bottom: 0;
+
+  max-width: 100%;
+  margin: 0;
+
+  will-change: transform, opacity;
+}
+
+.hero-ui_automate .hero-ui_message.is-agent {
+  right: 10%;
+
+  width: 90%;
+}
+
+.hero-ui_automate .hero-ui_message.is-customer {
+  right: 0;
+
+  width: auto;
+  max-width: 88%;
+}
+
+.hero-ui_automate .hero-ui_message-bubble {
+  padding: 9px 10px;
+
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.hero-ui_automate .hero-ui_message.is-agent .hero-ui_message-bubble {
+  background: rgba(247, 247, 247, 0.92);
+
+  border-color: rgba(255, 255, 255, 0.34);
+
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.hero-ui_automate .hero-ui_message.is-customer .hero-ui_message-bubble {
+  background: rgba(39, 42, 44, 0.88);
+
+  border-color: rgba(255, 255, 255, 0.16);
+
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.hero-ui_automate .hero-ui_morph-to {
+  margin-top: 7px;
+}
+
+/* ============================================================
+   AUGMENT
+============================================================ */
+
+.hero-ui_augment {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   AUGMENT — CONVERSATION
+============================================================ */
+
+/*
+ * IMPORTANT:
+ *
+ * This is NOT a flex stack anymore.
+ *
+ * Every message physically starts from exactly the same
+ * bottom-left origin.
+ *
+ * GSAP is responsible for moving previous messages upward.
+ */
+
+.hero-ui_augment-column.is-left {
+  position: absolute;
+
+  left: 3.5%;
+  top: auto;
+
+  width: 30%;
+  max-width: 315px;
+  height: 68%;
+
+  transform: scale(1.08);
+  transform-origin: left bottom;
+}
+
+.hero-ui_augment-column.is-left [data-ui-message] {
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+  max-width: 92%;
+
+  margin: 0;
+
+  will-change: transform, opacity;
+}
+
+.hero-ui_augment-column.is-left .hero-ui_message.is-customer {
+  left: auto;
+  right: 0;
+
+  width: auto;
+  max-width: 90%;
+}
+
+.hero-ui_augment-column.is-left .hero-ui_message-bubble {
+  padding: 8px 10px;
+}
+
+/* ============================================================
+   AUGMENT — GREEN PHRASE HIGHLIGHT
+============================================================ */
+
+.hero-ui_highlight {
+  display: inline;
+
+  padding: 1px 2px;
+
+  border-radius: 2px;
+
+  color: #17200c;
+  background: #baf460;
+
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ============================================================
+   AUGMENT — ASSIST COLUMN
+============================================================ */
+
+/*
+ * Knowledge Agent + AI Summary also originate from the
+ * exact same bottom-right position.
+ *
+ * Their movement/transition is controlled entirely by GSAP.
+ */
+
+.hero-ui_augment-column.is-right {
+  position: absolute;
+
+  right: 3.5%;
+  top: auto;
+
+  width: 31%;
+  max-width: 350px;
+  height: 68%;
+
+  transform: scale(1.08);
+  transform-origin: right bottom;
+}
+
+.hero-ui_augment-column.is-right .hero-ui_assist-card {
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+
+  margin: 0;
+
+  will-change: transform, opacity;
+}
+
+/* ============================================================
+   AUGMENT — ASSIST CARDS
+============================================================ */
+
+.hero-ui_assist-card {
+  width: 100%;
+  padding: 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(43, 38, 38, 0.8);
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+  backdrop-filter: blur(11px);
+  -webkit-backdrop-filter: blur(11px);
+}
+
+.hero-ui_assist-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.hero-ui_assist-icon {
+  width: 12px;
+  height: 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 2px;
+
+  background: transparent;
+}
+
+.hero-ui_assist-question {
+  margin-top: 10px;
+
+  font-size: 9px;
+  line-height: 1.35;
+
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.hero-ui_result {
+  margin-top: 9px;
+}
+
+.hero-ui_result .hero-ui_status-pill {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hero-ui_result-text {
+  padding: 8px;
+
+  border: 1px solid rgba(121, 169, 255, 0.75);
+  border-radius: 7px;
+
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.hero-ui_sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+
+  margin-top: 8px;
+}
+
+.hero-ui_sources-label {
+  font-size: 8px;
+
+  opacity: 0.55;
+}
+
+.hero-ui_source-pill,
+.hero-ui_context-pill {
+  padding: 3px 7px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.1);
+
+  font-size: 7.5px;
+  line-height: 1.1;
+
+  white-space: nowrap;
+}
+
+.hero-ui_context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 8px;
+}
+
+.hero-ui_context-label {
+  font-size: 8px;
+
+  opacity: 0.55;
+}
+
+/* ============================================================
+   AUGMENT — SUMMARY
+============================================================ */
+
+.hero-ui_assist-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hero-ui_claim-loading,
+.hero-ui_claim-done {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  font-size: 7.5px;
+  line-height: 1;
+}
+
+.hero-ui_claim-done {
+  margin-top: 4px;
+}
+
+.hero-ui_summary-field {
+  padding: 5px 7px;
+
+  border: 1px solid rgba(230, 172, 84, 0.78);
+  border-bottom: 0;
+
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hero-ui_summary-field:first-child {
+  border-radius: 7px 7px 0 0;
+}
+
+.hero-ui_summary-field:last-child {
+  border-bottom: 1px solid rgba(230, 172, 84, 0.88);
+
+  border-radius: 0 0 7px 7px;
+}
+
+.hero-ui_summary-label {
+  margin-bottom: 2px;
+
+  font-size: 6.5px;
+  line-height: 1.2;
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  opacity: 0.58;
+}
+
+.hero-ui_summary-value {
+  font-size: 8px;
+  line-height: 1.3;
+}
+
+/* ============================================================
+   ANALYZE
+============================================================ */
+
+.hero-ui_analyze {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * Spike / Analyst / Product Team all use one physical origin.
+ *
+ * This fixes the original issue where they appeared according
+ * to normal DOM stack order rather than being revealed from
+ * one consistent location.
+ */
+
+.hero-ui_analyze-column {
+  position: absolute;
+
+  left: 3.5%;
+  top: auto;
+
+  width: 24%;
+  max-width: 270px;
+  height: 68%;
+
+  transform: scale(1.1);
+  transform-origin: left bottom;
+}
+
+.hero-ui_analyze-column .hero-ui_analyze-card {
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+
+  margin: 0;
+
+  will-change: transform, opacity;
+}
+
+/* ============================================================
+   ANALYZE — COMMON CARD
+============================================================ */
+
+.hero-ui_analyze-card {
+  width: 100%;
+  padding: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  background: linear-gradient(rgba(93, 54, 35, 0.82), rgba(93, 54, 35, 0.82));
+
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ============================================================
+   ANALYZE — SPIKE
+============================================================ */
+
+.hero-ui_alert-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  width: fit-content;
+  padding: 3px 6px;
+
+  border-radius: 999px;
+
+  color: #ff8c79;
+  background: rgba(180, 54, 38, 0.25);
+
+  font-size: 6.5px;
+  line-height: 1;
+}
+
+.hero-ui_alert-dot {
+  width: 4px;
+  height: 4px;
+
+  border-radius: 50%;
+
+  background: currentColor;
+}
+
+.hero-ui_analyze-title {
+  margin-top: 9px;
+
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.hero-ui_analyze-subtitle {
+  margin-top: 3px;
+
+  font-size: 7.5px;
+  line-height: 1.2;
+
+  opacity: 0.58;
+}
+
+/* ============================================================
+   ANALYZE — CHART
+============================================================ */
+
+.hero-ui_chart {
+  width: 100%;
+  height: 49px;
+
+  margin-top: 8px;
+
+  color: #72a7ff;
+}
+
+.hero-ui_chart svg {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+}
+
+.hero-ui_chart-axis {
+  display: flex;
+  justify-content: space-between;
+
+  margin-top: 3px;
+
+  font-size: 6px;
+  line-height: 1;
+
+  opacity: 0.48;
+}
+
+/* ============================================================
+   ANALYZE — ANALYST
+============================================================ */
+
+.hero-ui_analyze-prompt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hero-ui_analyze-prompt .hero-ui_type-text {
+  flex: 1;
+
+  font-size: 8.5px;
+  line-height: 1.35;
+}
+
+.hero-ui_action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: none;
+
+  width: 26px;
+  height: 26px;
+
+  border-radius: 7px;
+
+  color: #fff;
+  background: #1768f2;
+}
+
+.hero-ui_action-button svg {
+  width: 13px;
+  height: 13px;
+}
+
+.hero-ui_analyze-expand {
+  overflow: hidden;
+}
+
+.hero-ui_analyze-expand .hero-ui_divider {
+  margin: 8px 0;
+}
+
+.hero-ui_report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.hero-ui_report-title {
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.hero-ui_share {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 3px 6px;
+
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+
+  font-size: 6.5px;
+}
+
+.hero-ui_share-icon {
+  width: 8px;
+  height: 8px;
+
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+
+.hero-ui_insight {
+  margin-top: 8px;
+  padding: 8px;
+
+  border: 1px solid rgba(230, 172, 84, 0.75);
+  border-radius: 7px;
+
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.hero-ui_insight-stat {
+  font-size: 24px;
+  line-height: 0.9;
+  font-weight: 400;
+
+  letter-spacing: -0.04em;
+}
+
+.hero-ui_progress {
+  width: 65%;
+  height: 13px;
+
+  margin-top: -18px;
+  margin-left: 33%;
+
+  overflow: hidden;
+
+  border-radius: 4px;
+
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.hero-ui_progress-fill {
+  width: 70%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(90deg, #73aaff, #1768f2);
+}
+
+.hero-ui_insight-description {
+  max-width: 85%;
+
+  margin-top: 12px;
+
+  font-size: 7.5px;
+  line-height: 1.4;
+
+  opacity: 0.8;
+}
+
+/* ============================================================
+   ANALYZE — SHARE
+============================================================ */
+
+.hero-ui_team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-ui_team-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 2px 5px 2px 2px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.12);
+
+  font-size: 7px;
+}
+
+.hero-ui_team-avatar {
+  width: 12px;
+  height: 12px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.hero-ui_add-person {
+  position: relative;
+
+  width: 16px;
+  height: 16px;
+
+  opacity: 0.75;
+}
+
+.hero-ui_add-person::before,
+.hero-ui_add-person::after {
+  content: '';
+
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 7px;
+  height: 1px;
+
+  background: currentColor;
+
+  transform: translate(-50%, -50%);
+}
+
+.hero-ui_add-person::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.hero-ui_analyze-card[data-ui-analyze='share'] .hero-ui_divider {
+  margin: 8px 0;
+}
+
+.hero-ui_share-message {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  min-height: 38px;
+
+  font-size: 7.5px;
+  line-height: 1.35;
+}
+
+.hero-ui_share-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  margin-top: 8px;
+}
+
+.hero-ui_attachment {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 3px 5px;
+
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+
+  font-size: 6px;
+  line-height: 1;
+}
+
+.hero-ui_file-icon {
+  width: 7px;
+  height: 9px;
+
+  border: 1px solid currentColor;
+  border-radius: 1px;
+}
+
+.hero-ui_send,
+.hero-ui_sent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  width: fit-content;
+
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  font-size: 7px;
+  line-height: 1;
+}
+
+.hero-ui_send {
+  color: #fff;
+  background: #1768f2;
+}
+
+.hero-ui_send svg {
+  width: 9px;
+  height: 9px;
+}
+
+.hero-ui_sent {
+  color: #d9ffe4;
+  background: rgba(35, 170, 80, 0.26);
+}
+
+/* ============================================================
+   ANALYZE — CURSOR / RIPPLE
+============================================================ */
+
+.hero-ui_cursor {
+  position: absolute;
+  z-index: 20;
+
+  left: 29%;
+
+  bottom: calc(var(--hero-ui-bottom) + var(--hero-ui-progress-size) + var(--hero-ui-gap));
+
+  width: 14px;
+
+  pointer-events: none;
+}
+
+.hero-ui_cursor svg {
+  display: block;
+
+  width: 100%;
+}
+
+/*
+ * This is NOT the permanent progress circle.
+ *
+ * Keep it completely hidden until GSAP explicitly performs
+ * the simulated Analyze click.
+ */
+
+.hero-ui_click-ripple {
+  position: absolute;
+  z-index: 19;
+
+  left: 2.8%;
+  bottom: var(--hero-ui-bottom);
+
+  width: 25px;
+  height: 25px;
+
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform: scale(0.5);
+
+  pointer-events: none;
+}
+
+/* ============================================================
+   MORPH STATES
+============================================================ */
+
+.hero-ui_morph-from,
+.hero-ui_morph-to {
+  position: relative;
+}
+
+.hero-ui_morph-to {
+  margin-top: 6px;
+}
+
+.hero-ui_automate .hero-ui_morph-to {
+  margin-top: 7px;
+}
+
+/* ============================================================
+   RESPONSIVE — <= 1200
+============================================================ */
+
+@media screen and (max-width: 1200px) {
+  .hero-ui_automate-column {
+    width: 29%;
+  }
+
+  .hero-ui_augment-column.is-left {
+    width: 31%;
+  }
+
+  .hero-ui_augment-column.is-right {
+    width: 32%;
+  }
+
+  .hero-ui_analyze-column {
+    width: 25%;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — <= 991
+============================================================ */
+
+@media screen and (max-width: 991px) {
+  .home-hero_media {
+    --hero-ui-bottom: 2rem;
+    --hero-ui-progress-size: 1.5rem;
+    --hero-ui-gap: 0.625rem;
+  }
+
+  .hero-ui_automate-column {
+    width: 34%;
+  }
+
+  .hero-ui_augment-column.is-left {
+    width: 35%;
+  }
+
+  .hero-ui_augment-column.is-right {
+    width: 36%;
+  }
+
+  .hero-ui_analyze-column {
+    width: 30%;
+  }
+}
+/* ============================================================
+   ANALYZE — SEND / SENT STATE
+   Both states permanently occupy the same grid cell, so swapping
+   them never changes the card width or height.
+============================================================ */
+
+.hero-ui_send-state {
+  position: relative;
+  display: grid;
+  align-items: center;
+  justify-items: end;
+}
+
+.hero-ui_send,
+.hero-ui_sent {
+  grid-area: 1 / 1;
+  margin: 0;
+}
+
+.hero-ui_send {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hero-ui_sent {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ============================================================
+ SLIDE PROGRESS RING
+ ============================================================ */
+
+.home-hero_progress {
+  --hero-slide-progress: 0;
+
+  position: absolute !important;
+  left: 32px !important;
+  bottom: 32px !important;
+  right: auto !important;
+  top: auto !important;
+
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Shared ring geometry */
+.home-hero_progress::before,
+.home-hero_progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+
+  mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+}
+
+/* Static background ring */
+.home-hero_progress::before {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Animated progress fill */
+.home-hero_progress::after {
+  background: conic-gradient(#fff calc(var(--hero-slide-progress) * 1turn), transparent 0);
+}
+
+/* ============================================================
+   RESPONSIVE — SIMPLIFIED TABLET / MOBILE SLIDER
+   ============================================================ */
+
+@media screen and (max-width: 991px) {
+  .hero-ui_automate-column,
+  .hero-ui_augment-column.is-left,
+  .hero-ui_augment-column.is-right,
+  .hero-ui_analyze-column {
+    transform: none;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .home-hero_media {
+    --hero-ui-bottom: 1rem;
+    --hero-ui-progress-size: 1.5rem;
+    --hero-ui-gap: 1rem;
+  }
+
+  .home-hero_progress {
+    left: 16px !important;
+    bottom: 16px !important;
+  }
+
+  .hero-ui_automate-column,
+  .hero-ui_augment-column.is-left,
+  .hero-ui_augment-column.is-right,
+  .hero-ui_analyze-column {
+    bottom: 64px;
+    max-width: none;
+    transform: none;
+  }
+
+  /* Automate: use almost the full slide width. */
+  .hero-ui_automate-column {
+    right: 4%;
+    width: 88%;
+    height: 70%;
+  }
+
+  .hero-ui_automate .hero-ui_message.is-agent {
+    right: 6%;
+    width: 94%;
+  }
+
+  .hero-ui_automate .hero-ui_message.is-customer {
+    max-width: 82%;
+  }
+
+  /* Augment: JS runs this as one sequential mobile story.
+     Both physical columns use the same lane; only one stage is
+     visible at a time, so there is no cross-column overlap. */
+  .hero-ui_augment-column.is-left,
+  .hero-ui_augment-column.is-right {
+    left: 4%;
+    right: auto;
+    width: 92%;
+    height: 74%;
+    transform-origin: left bottom;
+  }
+
+  .hero-ui_augment-column.is-left [data-ui-message],
+  .hero-ui_augment-column.is-right .hero-ui_assist-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .hero-ui_augment-column.is-left .hero-ui_message.is-customer {
+    width: auto;
+    max-width: 84%;
+  }
+
+  /* Analyze */
+  .hero-ui_analyze-column {
+    left: 4%;
+    width: 92%;
+    height: 74%;
+  }
+
+  /* Increase UI readability instead of scaling the whole canvas. */
+  .hero-ui_message-text {
+    font-size: 13px;
+  }
+  .hero-ui_agent-name {
+    font-size: 10px;
+  }
+  .hero-ui_agent-orb,
+  .hero-ui_agent-avatar {
+    width: 15px;
+    height: 15px;
+  }
+  .hero-ui_status-pill {
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+  .hero-ui_assist-card {
+    padding: 13px;
+  }
+  .hero-ui_assist-heading {
+    font-size: 12px;
+  }
+  .hero-ui_assist-question,
+  .hero-ui_result-text {
+    font-size: 11px;
+  }
+  .hero-ui_sources-label,
+  .hero-ui_context-label {
+    font-size: 9px;
+  }
+  .hero-ui_source-pill,
+  .hero-ui_context-pill {
+    font-size: 9px;
+  }
+  .hero-ui_summary-label {
+    font-size: 8px;
+  }
+  .hero-ui_summary-value {
+    font-size: 10px;
+  }
+  .hero-ui_analyze-title {
+    font-size: 12px;
+  }
+  .hero-ui_analyze-subtitle {
+    font-size: 9px;
+  }
+  .hero-ui_analyze-prompt .hero-ui_type-text {
+    font-size: 10px;
+  }
+  .hero-ui_report-title {
+    font-size: 10px;
+  }
+  .hero-ui_insight-description {
+    font-size: 9px;
+  }
+  .hero-ui_share-message {
+    font-size: 9px;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .hero-ui_automate-column {
+    right: 3%;
+    width: 94%;
+  }
+
+  .hero-ui_augment-column.is-left,
+  .hero-ui_augment-column.is-right,
+  .hero-ui_analyze-column {
+    left: 3%;
+    width: 94%;
+  }
+}
