@@ -1252,7 +1252,7 @@ scrollTrigger = ScrollTrigger.create({
 trigger: pinWrapper,
 pin: pinWrapper,
 start: () => `top ${restingPinTop}px`,
-end: () => `+=${Math.max(0, scrollDistance - 240)}`,
+end: () => `+=${scrollDistance}`,
 animation: scrollTimeline,
 scrub: true,
 pinSpacing: true,
