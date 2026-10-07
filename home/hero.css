@@ -1051,7 +1051,7 @@ html.is-home-hero-intro body {
 
   width: fit-content;
 
-  padding: 5px 8px;
+  padding: 4px 8px;
 
   border-radius: 999px;
 
@@ -1193,21 +1193,21 @@ html.is-home-hero-intro body {
 }
 /* ============================================================
    ANALYZE — SEND / SENT STATE
-   Both states permanently occupy the same grid cell, so swapping
-   them never changes the card width or height.
 ============================================================ */
 
 .hero-ui_send-state {
   position: relative;
   display: grid;
-  align-items: center;
-  justify-items: end;
+  place-items: center end;
+  flex: none;
+  align-self: center;
 }
 
 .hero-ui_send,
 .hero-ui_sent {
   grid-area: 1 / 1;
   margin: 0;
+  transform-origin: center;
 }
 
 .hero-ui_send {
@@ -1413,12 +1413,4 @@ html.is-home-hero-intro body {
     left: 3%;
     width: 94%;
   }
-}
-/* Analyze — keep Send / Sent aligned inside the footer */
-.hero-ui_share-footer {
-  align-items: center;
-}
-.hero-ui_send-state {
-  align-self: center;
-  transform: none !important;
 }
