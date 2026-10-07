@@ -1414,3 +1414,11 @@ html.is-home-hero-intro body {
     width: 94%;
   }
 }
+/* Analyze — keep Send / Sent aligned inside the footer */
+.hero-ui_share-footer {
+  align-items: center;
+}
+.hero-ui_send-state {
+  align-self: center;
+  transform: none !important;
+}
