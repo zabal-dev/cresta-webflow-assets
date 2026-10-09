@@ -1,0 +1,238 @@
+/* =====================================================================
+   CRESTA HOME HERO — full replacement for the old hero.css
+   (intro rules removed; UI overlays + progress ring match the prototype)
+   ===================================================================== */
+
+/* ---------- page / slider ---------- */
+html, body { overflow-x: clip; }
+.home-hero_slider, .home-hero_track, .home-hero_slide { will-change: transform; }
+
+/* side cards are dimmed, the active one is clear */
+.home-hero_slide { transition: filter .88s cubic-bezier(.22,.72,.16,1); }
+.home-hero_slide:not(.is-active) { filter: brightness(.66) saturate(.94); }
+.home-hero_slide.is-active { filter: none; }
+
+/* video framing per slide (from the prototype) */
+.home-hero_slide[data-hero-slide="0"] .home-hero_video { object-position: 100% 50%; }
+.home-hero_slide[data-hero-slide="1"] .home-hero_video { object-position: 50% 50%; }
+.home-hero_slide[data-hero-slide="2"] .home-hero_video { object-position: 100% 50%; }
+@media (max-width: 720px) {
+  .home-hero_slide[data-hero-slide="0"] .home-hero_video { object-position: 30% 50%; }
+  .home-hero_slide[data-hero-slide="1"] .home-hero_video { object-position: 52% 50%; }
+  .home-hero_slide[data-hero-slide="2"] .home-hero_video { object-position: 60% 50%; }
+}
+
+/* the UI layer fills the slide */
+.hero-ui { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+
+/* ---------- progress ring = play / pause ---------- */
+.home-hero_progress {
+  width: 34px !important; height: 34px !important;
+  border: 0 !important; border-radius: 50%;
+  background: none !important;
+  z-index: 5; cursor: pointer; pointer-events: auto !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-hero_slide .home-hero_progress { left: clamp(18px, 2vw, 34px); bottom: clamp(18px, 2vw, 32px); }
+.home-hero_progress::before, .home-hero_progress::after { content: none !important; }
+.home-hero_progress:focus { outline: none; }
+.home-hero_progress:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.hui-ring_hit { position: absolute; inset: -9px; }
+.hui-ring_svg { position: absolute; inset: 0; display: block; width: 34px; height: 34px; transform: rotate(-90deg); opacity: .55; transition: opacity 240ms ease; }
+.home-hero_slide.is-active .hui-ring_svg { opacity: 1; }
+.hui-ring_track { fill: none; stroke: rgba(255,255,255,.34); stroke-width: 2; }
+.hui-ring_arc { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 94.25; stroke-dashoffset: 94.25; }
+.hui-ring_glyphs { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity 200ms ease; pointer-events: none; }
+.home-hero_progress:hover .hui-ring_glyphs,
+.home-hero_progress:focus-visible .hui-ring_glyphs,
+.is-hero-paused .hui-ring_glyphs { opacity: 1; }
+.hui-ring_glyphs svg { grid-area: 1 / 1; width: 13px; height: 13px; fill: #fff; transition: opacity 160ms ease; }
+.hui-ring_play { margin-left: 2px; opacity: 0; }
+.is-hero-paused .hui-ring_pause { opacity: 0; }
+.is-hero-paused .hui-ring_play { opacity: 1; }
+@media (hover: none) { .home-hero_progress:hover .hui-ring_glyphs { opacity: 0; } .is-hero-paused .home-hero_progress .hui-ring_glyphs { opacity: 1; } }
+
+/* ---------- overlay root ---------- */
+.hui {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  font-family: "DM Sans Variable", "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; color: #25252A; text-align: left;
+}
+.hui *, .hui *::before, .hui *::after { box-sizing: border-box; }
+.hui p { margin: 0; }
+.hui img { max-width: none; }
+
+/* columns */
+.hui_col { position: absolute; top: 0; height: 100%; }
+.hui_col.is-automate  { right: 3.5%; width: 31%; min-width: 210px; max-width: 380px; }
+.hui_col.is-aug-left  { left: 3.5%;  width: 31%; min-width: 210px; max-width: 380px; height: calc(100% - 30px); }
+.hui_col.is-aug-right { right: 3.5%; width: 36%; min-width: 272px; max-width: 420px; }
+.hui_col.is-analyze   { left: 3.5%;  width: 25%; min-width: 186px; max-width: 306px; height: calc(100% - 30px); }
+@media (max-width: 720px) {
+  .hui_col { width: 80% !important; min-width: 0 !important; max-width: none !important; }
+  .hui_col.is-automate { right: 10%; }
+  .hui_col.is-analyze, .hui_col.is-aug-left { left: 10%; right: auto; }
+}
+
+/* message rows (positioned by the script) */
+.hui_row { position: absolute; left: 0; top: 0; width: 100%; display: flex; justify-content: flex-start; visibility: hidden; will-change: transform; }
+.hui_row[data-side="r"] { justify-content: flex-end; }
+
+/* ---------- chat bubbles ---------- */
+.hui_bubble { width: 87%; padding: 9px 13px 11px; border-radius: 14px; pointer-events: auto; cursor: text; user-select: text; -webkit-user-select: text; }
+.hui_bubble.is-fit { width: max-content; max-width: 87%; }
+.hui_bubble.is-ai {
+  background: rgba(255,255,255,.9);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15); backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.6), 0 6px 20px rgba(3,8,26,.14);
+}
+.hui_bubble.is-user {
+  padding: 10px 13px 11px;
+  background: linear-gradient(160deg, rgba(93,102,111,.62) 0%, rgba(93,102,111,.44) 52%, rgba(93,102,111,.56) 100%);
+  -webkit-backdrop-filter: blur(10px) saturate(1.5); backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.32), inset 0 0 0 1px rgba(255,255,255,.15), inset 0 -8px 18px rgba(255,255,255,.06), 0 8px 22px rgba(3,8,26,.2);
+}
+.hui_text { margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; color: #1D1D22; }
+.hui_bubble.is-user .hui_text { color: #FFFFFF; }
+.hui_who { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.hui_who.is-loose { margin-bottom: 7px; }
+.hui_orb { position: relative; flex: 0 0 auto; width: 15px; height: 15px; border-radius: 999px; overflow: hidden; background: radial-gradient(120% 120% at 30% 25%, #7FD8E8 0%, #A8E85C 46%, #12A594 100%); box-shadow: 0 0 0 1px rgba(0,0,0,.07); }
+.hui_avatar { flex: 0 0 auto; width: 15px; height: 15px; border-radius: 999px; overflow: hidden; background: #205AE3; box-shadow: 0 0 0 1px rgba(0,0,0,.07); }
+.hui_avatar img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; }
+.hui_name { font-size: 11.5px; font-weight: 500; letter-spacing: -0.005em; color: #8A8F98; line-height: normal; }
+.hui_highlight { background-image: linear-gradient(90deg, rgba(110,155,242,.9), rgba(32,89,227,.95)); background-repeat: no-repeat; background-position: left center; background-size: 0% 100%; }
+
+/* ---------- searching → answer morph ---------- */
+.hui_morph { position: relative; overflow: hidden; width: 100%; }
+.hui_morph-a, .hui_morph-b { position: absolute; left: 0; top: 0; width: max-content; will-change: opacity, transform; }
+.hui_morph-b { opacity: 0; }
+.hui_loading { display: flex; align-items: center; gap: 7px; }
+.hui_loading.is-wide { gap: 10px; }
+.hui_loading.is-report { gap: 8px; }
+.hui_loader { flex: 0 0 auto; display: block; width: 15px; height: 15px; }
+.hui_loader.is-16 { width: 16px; height: 16px; }
+.hui_loader.is-18 { width: 18px; height: 18px; }
+.hui_loader.is-dark { filter: brightness(0); opacity: .78; }
+.hui_loader.is-dark.is-16 { opacity: .8; }
+.hui_loader.is-light { filter: brightness(1.5); }
+.hui_loading-text { font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: #D9DCE4; white-space: nowrap; }
+.hui_loading-text.is-small { font-size: 12.5px; }
+
+.hui_gradient-pill { display: inline-flex; max-width: 100%; padding: 1px; border-radius: 11px; background: linear-gradient(103deg, #9B8AF0 0%, #7FA8EC 30%, #E4CBA8 66%, #F2A472 100%); }
+.hui_gradient-pill-inner { display: inline-flex; align-items: center; gap: 7px; min-width: 0; padding: 6px 10px 6px 8px; border-radius: 10px; background: #FFFFFF; }
+.hui_gradient-pill-inner.is-done { padding: 6px 11px 6px 8px; }
+.hui_pill-text { font-size: 12.5px; font-weight: 500; letter-spacing: -0.005em; color: #1D1D22; text-wrap: pretty; }
+.hui_pill-text.is-success { font-weight: 600; color: #0B7F52; }
+.hui_check-ring { flex: 0 0 auto; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 999px; background: #0EA963; }
+
+/* ---------- dark glass panels ---------- */
+.hui_panel {
+  width: 100%; border-radius: 14px;
+  background: rgba(20,22,32,.46); border: 1px solid rgba(255,255,255,.17);
+  -webkit-backdrop-filter: blur(30px) saturate(165%); backdrop-filter: blur(30px) saturate(165%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.11), 0 22px 48px rgba(6,6,12,.26);
+  pointer-events: auto; cursor: text; user-select: text; -webkit-user-select: text;
+}
+.hui_panel.is-assist { display: flex; flex-direction: column; gap: 11px; padding: 14px 15px 13px; border-radius: 13px; }
+.hui_panel.is-spike { padding: 12px 14px; }
+.hui_panel.is-analyst { border-radius: 15px; }
+.hui_panel.is-share { padding: 11px 14px 12px; }
+
+.hui_panel-title { display: flex; align-items: center; gap: 9px; color: #F2F3F6; font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em; line-height: normal; }
+.hui_panel-title svg { flex: 0 0 auto; }
+.hui_panel-title.is-inline { flex: 0 0 auto; white-space: nowrap; }
+.hui_panel-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; min-height: 26px; }
+.hui_query { margin: 0; font-size: 12.5px; line-height: 1.45; letter-spacing: -0.005em; color: #D5D9E2; text-wrap: pretty; }
+
+/* gradient hairline boxes */
+.hui_glow { position: relative; padding: 11px 12px; border-radius: 11px; background: rgba(255,255,255,.10); }
+.hui_glow::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, #93DEFD, #AE95DD 45%, #FCB56C);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+}
+.hui_glow.is-report { padding: 11px 12px 12px; }
+.hui_glow.is-chip { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,.14); }
+.hui_glow.is-chip svg { flex: 0 0 auto; }
+
+.hui_stack { display: flex; flex-direction: column; }
+.hui_stack.is-9 { gap: 9px; }
+.hui_stack.is-10 { gap: 10px; }
+.hui_answer { margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; color: #EDEFF4; text-wrap: pretty; }
+.hui [data-tk] { opacity: 0; }
+.hui_caret { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: -0.12em; opacity: 0; font-style: normal; }
+.hui_caret b { position: absolute; left: 1px; bottom: 0; display: block; width: 1.5px; height: 1.02em; border-radius: 1px; background: #EDEFF4; }
+.hui_divider { height: 1px; background: rgba(255,255,255,.14); }
+.hui_divider.is-report { margin-bottom: 11px; }
+.hui_divider.is-share { margin: 10px 0 11px; }
+.hui_sources { display: flex; align-items: center; flex-wrap: nowrap; gap: 7px; min-width: 0; }
+.hui_meta { flex: 0 0 auto; font-size: 11.5px; font-weight: 500; color: #B1BAC4; line-height: normal; }
+.hui_source { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; padding: 3px 8px; border-radius: 8px; background: rgba(255,255,255,.13); color: #E9ECF2; font-size: 11px; font-weight: 500; line-height: normal; }
+.hui_source.is-shrink { flex: 0 1 auto; min-width: 0; }
+.hui_source svg { flex: 0 0 auto; }
+.hui_ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hui_nowrap { white-space: nowrap; }
+.hui_context { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.hui_context-chip { display: flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; padding: 4px 9px; border-radius: 999px; background: rgba(252,181,108,.15); border: 1px solid rgba(252,181,108,.30); color: #E9ECF2; font-size: 11px; font-weight: 500; line-height: normal; }
+.hui_context-dot { flex: 0 0 auto; width: 5px; height: 5px; border-radius: 999px; background: #FCB56C; }
+.hui_field { display: flex; flex-direction: column; gap: 2px; }
+.hui_label { font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: rgba(213,217,226,.62); line-height: normal; }
+.hui_value { font-size: 13px; line-height: 1.45; letter-spacing: -0.005em; color: #EDEFF4; }
+
+/* claim pill */
+.hui_claim { flex: 0 0 auto; margin-left: auto; display: grid; justify-items: end; opacity: 0; transform: scale(.32); transform-origin: 100% 50%; }
+.hui_claim-state { grid-area: 1 / 1; display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 999px; background: rgba(255,255,255,.10); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.hui_claim-state.is-done { opacity: 0; }
+.hui_claim-text { font-size: 11px; font-weight: 600; letter-spacing: -0.005em; color: #E7E9F0; white-space: nowrap; line-height: normal; }
+.hui_claim-text.is-done { color: #FFFFFF; }
+.hui_claim-check { flex: 0 0 auto; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 999px; background: #22C55E; }
+
+/* ---------- analyze ---------- */
+.hui_spike-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(239,68,68,.20); margin-bottom: 10px; }
+.hui_spike-dot { width: 6px; height: 6px; border-radius: 999px; background: #EF4444; }
+.hui_spike-text { font-size: 10.5px; font-weight: 600; letter-spacing: -0.005em; color: #FCA5A5; line-height: normal; }
+.hui_spike-title { font-size: 15.5px; font-weight: 500; letter-spacing: -0.02em; color: #F2F3F6; line-height: normal; }
+.hui_spike-sub { font-size: 12px; letter-spacing: -0.005em; color: #B1BAC4; margin-top: 3px; line-height: normal; }
+.hui_chart { display: block; width: 100%; height: auto; aspect-ratio: 300 / 50; margin-top: 8px; overflow: visible; }
+.hui_chart-axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; letter-spacing: -0.005em; color: #9AA3AE; line-height: normal; }
+
+.hui_ask { display: flex; align-items: center; gap: 12px; padding: 10px 11px 10px 14px; }
+.hui_ask-text { margin: 0; flex: 1 1 auto; font-size: 13px; line-height: 1.45; letter-spacing: -0.005em; text-wrap: pretty; color: #FFFFFF; }
+.hui_ask-btn { flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #205AE3; }
+.hui_grow { height: 0; overflow: hidden; opacity: 0; will-change: height, opacity; }
+.hui_grow-in { padding: 0 14px 13px; }
+.hui_report-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.hui_report-title { flex: 1 1 auto; min-width: 0; font-size: 13.5px; font-weight: 500; letter-spacing: -0.01em; color: #F2F3F6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: normal; }
+.hui_share-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px; background: rgba(255,255,255,.13); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: #DCE6FB; line-height: normal; }
+.hui_report-body { margin-top: 11px; }
+.hui_stat { display: flex; align-items: center; gap: 12px; }
+.hui_stat-num { font-size: 30px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; color: #F5F6F9; }
+.hui_stat-bar { flex: 1 1 auto; display: block; height: 20px; border-radius: 6px; background: rgba(255,255,255,.16); overflow: hidden; }
+.hui_stat-fill { display: block; width: 70%; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #6E9BF2, #205AE3); }
+.hui_stat-text { margin: 10px 0 0; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; color: #E4E7EE; }
+
+.hui_share-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hui_team { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 4px; border-radius: 999px; background: rgba(255,255,255,.10); }
+.hui_team-dot { width: 17px; height: 17px; border-radius: 999px; background: rgba(255,255,255,.3); }
+.hui_team-name { font-size: 12px; font-weight: 500; letter-spacing: -0.01em; color: #EDEFF4; line-height: normal; }
+.hui_note { margin: 0; min-height: 1.5em; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; color: #EDEFF4; }
+.hui_note.is-second { margin-top: 3px; }
+.hui_share-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.hui_chip-text { min-width: 0; font-size: 9.5px; font-weight: 600; letter-spacing: .02em; color: #F5F6F9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: normal; }
+.hui_send-wrap { flex: 0 0 auto; display: grid; justify-items: end; }
+.hui_send-btn { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 999px; background: #205AE3; font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: #FFFFFF; line-height: normal; }
+.hui_sent { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 5px; border-radius: 999px; background: rgba(34,197,94,.18); box-shadow: inset 0 0 0 1px rgba(34,197,94,.34); opacity: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: #86EFAC; white-space: nowrap; line-height: normal; }
+.hui_sent-check { flex: 0 0 auto; display: grid; place-items: center; width: 19px; height: 19px; border-radius: 999px; background: #22C55E; }
+.hui_sent-check svg { display: block; }
+
+.hui_ripple { position: absolute; left: 0; top: 0; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 999px; border: 2px solid rgba(255,255,255,.9); box-shadow: 0 0 10px rgba(255,255,255,.35); opacity: 0; visibility: hidden; will-change: transform, opacity; }
+.hui_cursor { position: absolute; left: 0; top: 0; width: 22px; height: 24px; visibility: hidden; will-change: transform; filter: drop-shadow(0 3px 6px rgba(3,8,26,.4)); }
+
+/* ---------- Designer preview (scripts don't run in the Designer) ---------- */
+html.wf-design-mode .hui_col { display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding-bottom: 24px; }
+html.wf-design-mode .hui_col.is-aug-right { justify-content: flex-start; padding-top: 24px; }
+html.wf-design-mode .hui_row { position: relative; visibility: visible; }
+html.wf-design-mode .hui_morph { height: auto !important; }
+html.wf-design-mode .hui_morph-b { display: none; }
+html.wf-design-mode .hui_morph-a { position: relative; }
