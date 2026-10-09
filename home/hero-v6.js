@@ -13,9 +13,9 @@
      ASSETS — paste the Webflow asset URLs here
      ------------------------------------------------------------------ */
   const HERO_UI_ASSETS = {
-    loaderGif: '',   // cresta-loader.gif
-    loaderStill: '', // cresta-loader-still.png
-    agentAvatar: '', // agent-neda-avatar.jpg
+    loaderGif: 'https://cdn.prod.website-files.com/67fe49bf21b9f9d5b910d3c9/6ac8c81ee0cc34638a56b203_cresta-loader.gif',   // cresta-loader.gif
+    loaderStill: 'https://cdn.prod.website-files.com/67fe49bf21b9f9d5b910d3c9/6ac8c81db3b8089125af93e9_cresta-loader-still.png', // cresta-loader-still.png
+    agentAvatar: 'https://cdn.prod.website-files.com/67fe49bf21b9f9d5b910d3c9/6ac8c81eb5cf5ce1b0e4bc45_agent-neda-avatar.jpg', // agent-neda-avatar.jpg
   };
 
   /* how many times each clip plays before the slide may move on
