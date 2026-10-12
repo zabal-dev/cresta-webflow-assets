@@ -1,1416 +1,378 @@
-/* ============================================================
-   CRESTA HERO UI
+/* =====================================================================
+   CRESTA HOME HERO — full replacement for the old hero.css
+   (intro, UI overlays + progress ring match the client prototype)
+   ===================================================================== */
 
-   Animation visibility / transforms are controlled by GSAP.
-   All three timelines use the same progress-relative baseline.
-============================================================ */
+/* ---------- page / slider ---------- */
+html, body { overflow-x: clip; }
+.home-hero_slider, .home-hero_track, .home-hero_slide { will-change: transform; }
 
-/* ============================================================
-   ROOT
-============================================================ */
-html,
-body {
- overflow-x: clip;
-}
-html.is-home-hero-intro .home-hero_slider {
- overflow: visible;
-}
-.home-hero_content {
- opacity: 0;
- visibility: hidden;
-}
-.home-hero_slider,
-.home-hero_track,
-.home-hero_slide {
- will-change: transform;
-}
-.home-hero_slide:not(.is-active) {
- filter: brightness(0.66) saturate(0.94);
-}
-.home-hero_slide.is-active {
- filter: none;
-}
-html.is-home-hero-intro,
-html.is-home-hero-intro body {
- overflow: hidden;
-}
+/* ---------- intro ---------- */
+/* until the script has decided whether the intro plays, the hero stays dark so the
+   finished state never flashes first (failsafe: it shows anyway after 3.5s) */
+html:not(.is-hero-ready):not(.wf-design-mode) .home-hero_content,
+html:not(.is-hero-ready):not(.wf-design-mode) .home-hero_slider { opacity: 0; animation: hero-failsafe 0s linear 3.5s forwards; }
+@keyframes hero-failsafe { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
- .home-hero_intro {
-   display: none;
- }
- .home-hero_content {
-   opacity: 1;
-   visibility: visible;
- }
-}
-.hero-ui {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-
-  width: 100%;
-  height: 100%;
-
-  overflow: hidden;
-  pointer-events: none;
+  html:not(.is-hero-ready) .home-hero_content, html:not(.is-hero-ready) .home-hero_slider { opacity: 1; animation: none; }
 }
 
-.hero-ui [data-hero-ui],
-.hero-ui [data-hero-ui] *,
-.hero-ui [data-hero-ui] *::before,
-.hero-ui [data-hero-ui] *::after {
-  box-sizing: border-box;
+/* desktop: the slider only gets its full height once the script has measured the page,
+   so until then the hero holds a full screen — the next section never peeks in on load */
+@media (min-width: 992px) {
+  html:not(.is-hero-sized):not(.wf-design-mode) .section_default.is-home-hero { min-height: 100vh; min-height: 100svh; }
 }
 
-/*
- * Each individual UI animation fills its entire slide.
- * This gives GSAP one consistent coordinate system.
- */
-.hero-ui [data-hero-ui] {
-  position: absolute;
-  inset: 0;
-
-  width: 100%;
-  height: 100%;
-
-  font-family: inherit;
-  color: #fff;
-
-  pointer-events: none;
+/* the intro sentence: only on screen while the intro runs (the script sets top/height
+   to the space under the nav) */
+.home-hero_intro { display: none; }
+html.is-hero-intro .home-hero_intro {
+  display: flex; align-items: center; justify-content: center;
+  position: fixed; left: 0; right: 0; top: 72px; bottom: auto; height: calc(100vh - 72px);
+  padding: 0 16px; overflow: hidden; pointer-events: none; z-index: 20;
 }
-
-/* ============================================================
-   SHARED POSITIONING
-============================================================ */
-
-/*
- * Existing slide progress indicator dimensions.
- *
- * Every animation stack begins directly above:
- *
- *   UI
- *   ↓
- *   gap
- *   ↓
- *   progress circle
- *   ↓
- *   bottom spacing
- */
-
-.home-hero_media {
-  --hero-ui-bottom: 2.5rem;
-  --hero-ui-progress-size: 1.6rem;
-  --hero-ui-gap: 0.75rem;
-}
-
-/*
- * ONE baseline for every animation.
- *
- * Do not introduce slide-specific bottom: 8%, 15%, etc.
- */
-
-.hero-ui_automate-column,
-.hero-ui_augment-column.is-left,
-.hero-ui_augment-column.is-right,
-.hero-ui_analyze-column {
-  bottom: calc(var(--hero-ui-bottom) + var(--hero-ui-progress-size) + var(--hero-ui-gap));
-}
-
-/* ============================================================
-   SHARED MESSAGE
-============================================================ */
-
-.hero-ui_message {
-  position: relative;
-
-  width: fit-content;
-  max-width: 100%;
-}
-
-.hero-ui_message-bubble {
-  padding: 10px 12px;
-
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 10px;
-
-  background: rgba(30, 26, 25, 0.88);
-  color: rgba(255, 255, 255, 0.92);
-
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.08);
-
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.hero-ui_message.is-agent .hero-ui_message-bubble {
-  background: rgba(247, 247, 247, 0.92);
-  color: #262626;
-
-  border-color: rgba(255, 255, 255, 0.34);
-
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.hero-ui_message-text {
-  font-size: 11px;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-}
-
-/* ============================================================
-   AGENT HEADER
-============================================================ */
-
-.hero-ui_agent-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  margin-bottom: 5px;
-}
-
-.hero-ui_agent-name {
-  font-size: 9px;
-  line-height: 1;
-  font-weight: 500;
-
-  opacity: 0.58;
-}
-
-.hero-ui_agent-orb,
-.hero-ui_agent-avatar {
-  flex: none;
-
-  width: 13px;
-  height: 13px;
-
-  border-radius: 50%;
-}
-
-.hero-ui_agent-orb {
-  background: radial-gradient(circle at 65% 28%, #fff 0 7%, transparent 8%), linear-gradient(145deg, #7cf17c, #67e5a0 45%, #d4ef68);
-}
-
-.hero-ui_agent-avatar {
-  background: #bbb;
-}
-
-/* ============================================================
-   STATUS
-============================================================ */
-
-.hero-ui_status-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  width: fit-content;
-  padding: 5px 7px;
-
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 999px;
-
-  background: rgba(255, 255, 255, 0.09);
-
-  font-size: 9px;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.hero-ui_message.is-agent .hero-ui_status-pill {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.05);
-}
-
-.hero-ui_loader {
-  flex: none;
-
-  width: 9px;
-  height: 9px;
-
-  border: 1.25px solid rgba(255, 255, 255, 0.25);
-  border-top-color: #fff;
-  border-radius: 50%;
-
-  animation: heroUiSpin 0.7s linear infinite;
-}
-
-.hero-ui_message.is-agent .hero-ui_loader,
-.hero-ui_assist-card .hero-ui_loader {
-  border-color: rgba(0, 0, 0, 0.18);
-  border-top-color: rgba(0, 0, 0, 0.72);
-}
-
-@keyframes heroUiSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.hero-ui_success-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex: none;
-
-  width: 14px;
-  height: 14px;
-
-  border-radius: 50%;
-
-  background: #25a94f;
-  color: #fff;
-}
-
-.hero-ui_success-icon svg {
-  width: 9px;
-  height: 9px;
-}
-
-.hero-ui_divider {
-  width: 100%;
-  height: 1px;
-
-  background: rgba(255, 255, 255, 0.14);
-}
-
-/* ============================================================
-   AUTOMATE
-============================================================ */
-
-.hero-ui_automate {
-  position: relative;
-
-  width: 100%;
-  height: 100%;
-}
-
-/*
- * Automate animation canvas.
- *
- * All messages originate at bottom: 0 inside this canvas.
- * GSAP pushes previous messages upward.
- */
-
-.hero-ui_automate-column {
-  position: absolute;
-
-  right: 3.5%;
-
-  width: 27%;
-  max-width: 315px;
-  height: 50%;
-
-  transform: scale(1.15);
-  transform-origin: right bottom;
-}
-
-.hero-ui_automate .hero-ui_message {
-  position: absolute;
-
-  right: 0;
-  bottom: 0;
-
-  max-width: 100%;
-  margin: 0;
-
+.home-hero_intro .home-hero_intro-heading {
+  position: relative; top: auto; left: auto; transform: none;
+  display: flex; flex-flow: row nowrap; align-items: center; justify-content: center; white-space: nowrap;
+  font-size: clamp(14px, 3.1vw, 50px); font-weight: 500; line-height: 1.08; letter-spacing: -0.03em;
+  color: var(--_design-tokens---colors--text--text-primary, #24242A);
   will-change: transform, opacity;
 }
-
-.hero-ui_automate .hero-ui_message.is-agent {
-  right: 10%;
-
-  width: 90%;
-}
-
-.hero-ui_automate .hero-ui_message.is-customer {
-  right: 0;
-
-  width: auto;
-  max-width: 88%;
-}
-
-.hero-ui_automate .hero-ui_message-bubble {
-  padding: 9px 10px;
-
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.hero-ui_automate .hero-ui_message.is-agent .hero-ui_message-bubble {
-  background: rgba(247, 247, 247, 0.92);
-
-  border-color: rgba(255, 255, 255, 0.34);
-
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.hero-ui_automate .hero-ui_message.is-customer .hero-ui_message-bubble {
-  background: rgba(39, 42, 44, 0.88);
-
-  border-color: rgba(255, 255, 255, 0.16);
-
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.hero-ui_automate .hero-ui_morph-to {
-  margin-top: 7px;
-}
-
-/* ============================================================
-   AUGMENT
-============================================================ */
-
-.hero-ui_augment {
-  position: relative;
-
-  width: 100%;
-  height: 100%;
-}
-
-/* ============================================================
-   AUGMENT — CONVERSATION
-============================================================ */
-
-/*
- * IMPORTANT:
- *
- * This is NOT a flex stack anymore.
- *
- * Every message physically starts from exactly the same
- * bottom-left origin.
- *
- * GSAP is responsible for moving previous messages upward.
- */
-
-.hero-ui_augment-column.is-left {
-  position: absolute;
-
-  left: 3.5%;
-  top: auto;
-
-  width: 30%;
-  max-width: 315px;
-  height: 68%;
-
-  transform: scale(1.08);
-  transform-origin: left bottom;
-}
-
-.hero-ui_augment-column.is-left [data-ui-message] {
-  position: absolute;
-
-  left: 0;
-  bottom: 0;
-
-  width: 100%;
-  max-width: 92%;
-
-  margin: 0;
-
-  will-change: transform, opacity;
-}
-
-.hero-ui_augment-column.is-left .hero-ui_message.is-customer {
-  left: auto;
-  right: 0;
-
-  width: auto;
-  max-width: 90%;
-}
-
-.hero-ui_augment-column.is-left .hero-ui_message-bubble {
-  padding: 8px 10px;
-}
-
-/* ============================================================
-   AUGMENT — GREEN PHRASE HIGHLIGHT
-============================================================ */
-
-.hero-ui_highlight {
-  display: inline;
-
-  padding: 1px 2px;
-
-  border-radius: 2px;
-
-  color: #17200c;
-  background: #baf460;
-
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-/* ============================================================
-   AUGMENT — ASSIST COLUMN
-============================================================ */
-
-/*
- * Knowledge Agent + AI Summary also originate from the
- * exact same bottom-right position.
- *
- * Their movement/transition is controlled entirely by GSAP.
- */
-
-.hero-ui_augment-column.is-right {
-  position: absolute;
-
-  right: 3.5%;
-  top: auto;
-
-  width: 31%;
-  max-width: 350px;
-  height: 68%;
-
-  transform: scale(1.08);
-  transform-origin: right bottom;
-}
-
-.hero-ui_augment-column.is-right .hero-ui_assist-card {
-  position: absolute;
-
-  left: 0;
-  bottom: 0;
-
-  width: 100%;
-
-  margin: 0;
-
-  will-change: transform, opacity;
-}
-
-/* ============================================================
-   AUGMENT — ASSIST CARDS
-============================================================ */
-
-.hero-ui_assist-card {
-  width: 100%;
-  padding: 11px;
-
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 10px;
-
-  color: rgba(255, 255, 255, 0.92);
-  background: rgba(43, 38, 38, 0.8);
-
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-
-  backdrop-filter: blur(11px);
-  -webkit-backdrop-filter: blur(11px);
-}
-
-.hero-ui_assist-heading {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  font-size: 10px;
-  line-height: 1.2;
-  font-weight: 500;
-}
-
-.hero-ui_assist-icon {
-  width: 12px;
-  height: 12px;
-
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  border-radius: 2px;
-
-  background: transparent;
-}
-
-.hero-ui_assist-question {
-  margin-top: 10px;
-
-  font-size: 9px;
-  line-height: 1.35;
-
-  color: rgba(255, 255, 255, 0.76);
-}
-
-.hero-ui_result {
-  margin-top: 9px;
-}
-
-.hero-ui_result .hero-ui_status-pill {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.hero-ui_result-text {
-  padding: 8px;
-
-  border: 1px solid rgba(121, 169, 255, 0.75);
-  border-radius: 7px;
-
-  font-size: 9px;
-  line-height: 1.35;
-}
-
-.hero-ui_sources {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-
-  margin-top: 8px;
-}
-
-.hero-ui_sources-label {
-  font-size: 8px;
-
-  opacity: 0.55;
-}
-
-.hero-ui_source-pill,
-.hero-ui_context-pill {
-  padding: 3px 7px;
-
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-
-  background: rgba(255, 255, 255, 0.1);
-
-  font-size: 7.5px;
-  line-height: 1.1;
-
-  white-space: nowrap;
-}
-
-.hero-ui_context {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  margin-top: 8px;
-}
-
-.hero-ui_context-label {
-  font-size: 8px;
-
-  opacity: 0.55;
-}
-
-/* ============================================================
-   AUGMENT — SUMMARY
-============================================================ */
-
-.hero-ui_assist-heading-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.hero-ui_claim-loading,
-.hero-ui_claim-done {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  font-size: 7.5px;
-  line-height: 1;
-}
-
-.hero-ui_claim-done {
-  margin-top: 4px;
-}
-
-.hero-ui_summary-field {
-  padding: 5px 7px;
-
-  border: 1px solid rgba(230, 172, 84, 0.78);
-  border-bottom: 0;
-
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.hero-ui_summary-field:first-child {
-  border-radius: 7px 7px 0 0;
-}
-
-.hero-ui_summary-field:last-child {
-  border-bottom: 1px solid rgba(230, 172, 84, 0.88);
-
-  border-radius: 0 0 7px 7px;
-}
-
-.hero-ui_summary-label {
-  margin-bottom: 2px;
-
-  font-size: 6.5px;
-  line-height: 1.2;
-
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-
-  opacity: 0.58;
-}
-
-.hero-ui_summary-value {
-  font-size: 8px;
-  line-height: 1.3;
-}
-
-/* ============================================================
-   ANALYZE
-============================================================ */
-
-.hero-ui_analyze {
-  position: relative;
-
-  width: 100%;
-  height: 100%;
-}
-
-/*
- * Spike / Analyst / Product Team all use one physical origin.
- *
- * This fixes the original issue where they appeared according
- * to normal DOM stack order rather than being revealed from
- * one consistent location.
- */
-
-.hero-ui_analyze-column {
-  position: absolute;
-
-  left: 3.5%;
-  top: auto;
-
-  width: 24%;
-  max-width: 270px;
-  height: 68%;
-
-  transform: scale(1.1);
-  transform-origin: left bottom;
-}
-
-.hero-ui_analyze-column .hero-ui_analyze-card {
-  position: absolute;
-
-  left: 0;
-  bottom: 0;
-
-  width: 100%;
-
-  margin: 0;
-
-  will-change: transform, opacity;
-}
-
-/* ============================================================
-   ANALYZE — COMMON CARD
-============================================================ */
-
-.hero-ui_analyze-card {
-  width: 100%;
-  padding: 10px;
-
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 10px;
-
-  color: rgba(255, 255, 255, 0.92);
-
-  background: linear-gradient(rgba(93, 54, 35, 0.82), rgba(93, 54, 35, 0.82));
-
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* ============================================================
-   ANALYZE — SPIKE
-============================================================ */
-
-.hero-ui_alert-pill {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  width: fit-content;
-  padding: 3px 6px;
-
-  border-radius: 999px;
-
-  color: #ff8c79;
-  background: rgba(180, 54, 38, 0.25);
-
-  font-size: 6.5px;
-  line-height: 1;
-}
-
-.hero-ui_alert-dot {
-  width: 4px;
-  height: 4px;
-
-  border-radius: 50%;
-
-  background: currentColor;
-}
-
-.hero-ui_analyze-title {
-  margin-top: 9px;
-
-  font-size: 10px;
-  line-height: 1.2;
-  font-weight: 500;
-}
-
-.hero-ui_analyze-subtitle {
-  margin-top: 3px;
-
-  font-size: 7.5px;
-  line-height: 1.2;
-
-  opacity: 0.58;
-}
-
-/* ============================================================
-   ANALYZE — CHART
-============================================================ */
-
-.hero-ui_chart {
-  width: 100%;
-  height: 49px;
-
-  margin-top: 8px;
-
-  color: #72a7ff;
-}
-
-.hero-ui_chart svg {
-  display: block;
-
-  width: 100%;
-  height: 100%;
-
-  overflow: visible;
-}
-
-.hero-ui_chart-axis {
-  display: flex;
-  justify-content: space-between;
-
-  margin-top: 3px;
-
-  font-size: 6px;
-  line-height: 1;
-
-  opacity: 0.48;
-}
-
-/* ============================================================
-   ANALYZE — ANALYST
-============================================================ */
-
-.hero-ui_analyze-prompt {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.hero-ui_analyze-prompt .hero-ui_type-text {
-  flex: 1;
-
-  font-size: 8.5px;
-  line-height: 1.35;
-}
-
-.hero-ui_action-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex: none;
-
-  width: 26px;
-  height: 26px;
-
-  border-radius: 7px;
-
-  color: #fff;
-  background: #1768f2;
-}
-
-.hero-ui_action-button svg {
-  width: 13px;
-  height: 13px;
-}
-
-.hero-ui_analyze-expand {
-  overflow: hidden;
-}
-
-.hero-ui_analyze-expand .hero-ui_divider {
-  margin: 8px 0;
-}
-
-.hero-ui_report-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.hero-ui_report-title {
-  font-size: 8px;
-  font-weight: 500;
-}
-
-.hero-ui_share {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  padding: 3px 6px;
-
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 999px;
-
-  font-size: 6.5px;
-}
-
-.hero-ui_share-icon {
-  width: 8px;
-  height: 8px;
-
-  border: 1px solid currentColor;
-  border-radius: 2px;
-}
-
-.hero-ui_insight {
-  margin-top: 8px;
-  padding: 8px;
-
-  border: 1px solid rgba(230, 172, 84, 0.75);
-  border-radius: 7px;
-
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.hero-ui_insight-stat {
-  font-size: 24px;
-  line-height: 0.9;
-  font-weight: 400;
-
-  letter-spacing: -0.04em;
-}
-
-.hero-ui_progress {
-  width: 65%;
-  height: 13px;
-
-  margin-top: -18px;
-  margin-left: 33%;
-
-  overflow: hidden;
-
-  border-radius: 4px;
-
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.hero-ui_progress-fill {
-  width: 70%;
-  height: 100%;
-
-  border-radius: inherit;
-
-  background: linear-gradient(90deg, #73aaff, #1768f2);
-}
-
-.hero-ui_insight-description {
-  max-width: 85%;
-
-  margin-top: 12px;
-
-  font-size: 7.5px;
-  line-height: 1.4;
-
-  opacity: 0.8;
-}
-
-/* ============================================================
-   ANALYZE — SHARE
-============================================================ */
-
-.hero-ui_team-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hero-ui_team-pill {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-
-  padding: 2px 5px 2px 2px;
-
-  border-radius: 999px;
-
-  background: rgba(255, 255, 255, 0.12);
-
-  font-size: 7px;
-}
-
-.hero-ui_team-avatar {
-  width: 12px;
-  height: 12px;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.45);
-}
-
-.hero-ui_add-person {
-  position: relative;
-
-  width: 16px;
-  height: 16px;
-
-  opacity: 0.75;
-}
-
-.hero-ui_add-person::before,
-.hero-ui_add-person::after {
-  content: '';
-
-  position: absolute;
-
-  left: 50%;
-  top: 50%;
-
-  width: 7px;
-  height: 1px;
-
-  background: currentColor;
-
-  transform: translate(-50%, -50%);
-}
-
-.hero-ui_add-person::after {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
-
-.hero-ui_analyze-card[data-ui-analyze='share'] .hero-ui_divider {
-  margin: 8px 0;
-}
-
-.hero-ui_share-message {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-
-  min-height: 38px;
-
-  font-size: 7.5px;
-  line-height: 1.35;
-}
-
-.hero-ui_share-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-
-  margin-top: 8px;
-}
-
-.hero-ui_attachment {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  padding: 3px 5px;
-
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 4px;
-
-  font-size: 6px;
-  line-height: 1;
-}
-
-.hero-ui_file-icon {
-  width: 7px;
-  height: 9px;
-
-  border: 1px solid currentColor;
-  border-radius: 1px;
-}
-
-.hero-ui_send,
-.hero-ui_sent {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  width: fit-content;
-
-  padding: 4px 8px;
-
-  border-radius: 999px;
-
-  font-size: 7px;
-  line-height: 1;
-}
-
-.hero-ui_send {
-  color: #fff;
-  background: #1768f2;
-}
-
-.hero-ui_send svg {
-  width: 9px;
-  height: 9px;
-}
-
-.hero-ui_sent {
-  color: #d9ffe4;
-  background: rgba(35, 170, 80, 0.26);
-}
-
-/* ============================================================
-   ANALYZE — CURSOR / RIPPLE
-============================================================ */
-
-.hero-ui_cursor {
-  position: absolute;
-  z-index: 20;
-
-  left: 29%;
-
-  bottom: calc(var(--hero-ui-bottom) + var(--hero-ui-progress-size) + var(--hero-ui-gap));
-
-  width: 14px;
-
-  pointer-events: none;
-}
-
-.hero-ui_cursor svg {
-  display: block;
-
-  width: 100%;
-}
-
-/*
- * This is NOT the permanent progress circle.
- *
- * Keep it completely hidden until GSAP explicitly performs
- * the simulated Analyze click.
- */
-
-.hero-ui_click-ripple {
-  position: absolute;
-  z-index: 19;
-
-  left: 2.8%;
-  bottom: var(--hero-ui-bottom);
-
-  width: 25px;
-  height: 25px;
-
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-
-  opacity: 0;
-  visibility: hidden;
-
-  transform: scale(0.5);
-
-  pointer-events: none;
-}
-
-/* ============================================================
-   MORPH STATES
-============================================================ */
-
-.hero-ui_morph-from,
-.hero-ui_morph-to {
-  position: relative;
-}
-
-.hero-ui_morph-to {
-  margin-top: 6px;
-}
-
-.hero-ui_automate .hero-ui_morph-to {
-  margin-top: 7px;
-}
-
-/* ============================================================
-   RESPONSIVE — <= 1200
-============================================================ */
-
-@media screen and (max-width: 1200px) {
-  .hero-ui_automate-column {
-    width: 29%;
-  }
-
-  .hero-ui_augment-column.is-left {
-    width: 31%;
-  }
-
-  .hero-ui_augment-column.is-right {
-    width: 32%;
-  }
-
-  .hero-ui_analyze-column {
-    width: 25%;
-  }
-}
-
-/* ============================================================
-   RESPONSIVE — <= 991
-============================================================ */
-
-@media screen and (max-width: 991px) {
-  .home-hero_media {
-    --hero-ui-bottom: 2rem;
-    --hero-ui-progress-size: 1.5rem;
-    --hero-ui-gap: 0.625rem;
-  }
-
-  .hero-ui_automate-column {
-    width: 34%;
-  }
-
-  .hero-ui_augment-column.is-left {
-    width: 35%;
-  }
-
-  .hero-ui_augment-column.is-right {
-    width: 36%;
-  }
-
-  .hero-ui_analyze-column {
-    width: 30%;
-  }
-}
-/* ============================================================
-   ANALYZE — SEND / SENT STATE
-============================================================ */
-
-.hero-ui_send-state {
-  position: relative;
-  display: grid;
-  place-items: center end;
-  flex: none;
-  align-self: center;
-}
-
-.hero-ui_send,
-.hero-ui_sent {
-  grid-area: 1 / 1;
-  margin: 0;
-  transform-origin: center;
-}
-
-.hero-ui_send {
-  opacity: 1;
-  visibility: visible;
-}
-
-.hero-ui_sent {
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* ============================================================
- SLIDE PROGRESS RING
- ============================================================ */
-
+.home-hero_intro .home-hero_intro-text {
+  font-size: inherit; line-height: inherit; letter-spacing: inherit; font-weight: inherit; color: inherit;
+  flex: none; will-change: transform;
+}
+.home-hero_intro-gap { display: block; flex: 0 0 auto; width: .32em; height: 1px; }
+/* phones: the two halves stack and the video opens between the lines */
+@media (max-width: 767px) {
+  .home-hero_intro .home-hero_intro-heading { flex-flow: column nowrap; font-size: clamp(22px, 7.4vw, 34px); line-height: 1.1; }
+  .home-hero_intro-gap { width: 1px; height: .32em; }
+}
+/* the riffling deck is one undimmed frame; names + rings arrive once the row has spread
+   (classes sit on the slider: the desktop pin moves it out of the component) */
+.home-hero_slider.is-hero-deck .home-hero_slide { filter: none !important; }
+.home-hero_slider.is-hero-labels-off .home-hero_slide-title,
+.home-hero_slider.is-hero-labels-off .home-hero_progress { opacity: 0 !important; }
+
+/* Designer: the sentence stays visible and editable above the hero */
+html.wf-design-mode .home-hero_intro {
+  display: flex; justify-content: center; position: relative; inset: auto; z-index: auto;
+  padding: 1.25rem 0; outline: 1px dashed rgba(37, 99, 235, .5); pointer-events: auto;
+}
+
+/* side cards are dimmed, the active one is clear */
+.home-hero_slide { transition: filter .88s cubic-bezier(.22,.72,.16,1); }
+.home-hero_slide:not(.is-active) { filter: brightness(.66) saturate(.94); }
+.home-hero_slide.is-active { filter: none; }
+
+/* video framing is set by the script (focal point per clip) */
+.home-hero_video { object-fit: cover; }
+
+/* the UI layer fills the slide */
+.hero-ui { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+
+/* ---------- progress ring = play / pause ---------- */
 .home-hero_progress {
-  --hero-slide-progress: 0;
+  width: 34px !important; height: 34px !important;
+  border: 0 !important; border-radius: 50%;
+  background: none !important;
+  z-index: 5; cursor: pointer; pointer-events: auto !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-hero_slide .home-hero_progress { left: clamp(18px, 2vw, 34px); bottom: clamp(18px, 2vw, 32px); }
+.home-hero_progress::before, .home-hero_progress::after { content: none !important; }
+.home-hero_progress:focus { outline: none; }
+.home-hero_progress:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.hui-ring_hit { position: absolute; inset: -9px; }
+.hui-ring_svg { position: absolute; inset: 0; display: block; width: 34px; height: 34px; transform: rotate(-90deg); opacity: .55; transition: opacity 240ms ease; }
+.home-hero_slide.is-active .hui-ring_svg { opacity: 1; }
+.hui-ring_track { fill: none; stroke: rgba(255,255,255,.34); stroke-width: 2; }
+.hui-ring_arc { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 94.25; stroke-dashoffset: 94.25; }
+.hui-ring_glyphs { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity 200ms ease; pointer-events: none; }
+.home-hero_progress:hover .hui-ring_glyphs,
+.home-hero_progress:focus-visible .hui-ring_glyphs,
+.is-hero-paused .hui-ring_glyphs { opacity: 1; }
+.hui-ring_glyphs svg { grid-area: 1 / 1; width: 13px; height: 13px; fill: #fff; transition: opacity 160ms ease; }
+.hui-ring_play { margin-left: 2px; opacity: 0; }
+.is-hero-paused .hui-ring_pause { opacity: 0; }
+.is-hero-paused .hui-ring_play { opacity: 1; }
+@media (hover: none) { .home-hero_progress:hover .hui-ring_glyphs { opacity: 0; } .is-hero-paused .home-hero_progress .hui-ring_glyphs { opacity: 1; } }
 
-  position: absolute !important;
-  left: 32px !important;
-  bottom: 32px !important;
-  right: auto !important;
-  top: auto !important;
+/* ---------- overlay root ---------- */
+.hui {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  font-family: "DM Sans Variable", "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; color: #25252A; text-align: left;
+}
+.hui *, .hui *::before, .hui *::after { box-sizing: border-box; }
+.hui p { margin: 0; }
+.hui img { max-width: none; }
 
-  border-color: transparent !important;
-  background: transparent !important;
+/* columns */
+.hui_col { position: absolute; top: 0; height: 100%; }
+.hui_col.is-automate  { right: 3.5%; width: 31%; min-width: 210px; max-width: 380px; }
+.hui_col.is-aug-left  { left: 3.5%;  width: 31%; min-width: 210px; max-width: 380px; height: calc(100% - clamp(18px, 2vw, 32px) - 44px); }
+.hui_col.is-aug-right { right: 3.5%; width: 36%; min-width: 272px; max-width: 420px; height: calc(100% - clamp(18px, 2vw, 32px) - 44px); }
+.hui_col.is-analyze   { left: 3.5%;  width: 25%; min-width: 186px; max-width: 306px; height: calc(100% - 30px); }
+@media (max-width: 720px) {
+  .hui_col { width: 80% !important; min-width: 0 !important; max-width: none !important; }
+  .hui_col.is-automate { right: 10%; }
+  .hui_col.is-analyze, .hui_col.is-aug-left { left: 10%; right: auto; }
+  /* clear the slide title above and the play ring below */
+  .hui_col.is-automate, .hui_col.is-analyze, .hui_col.is-aug-left { top: 46px; height: calc(100% - 104px); }
 }
 
-/* Shared ring geometry */
-.home-hero_progress::before,
-.home-hero_progress::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
+/* message rows (positioned by the script) */
+.hui_row { position: absolute; left: 0; top: 0; width: 100%; display: flex; justify-content: flex-start; visibility: hidden; will-change: transform; }
+.hui_row[data-side="r"] { justify-content: flex-end; }
 
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
-
-  mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+/* ---------- chat bubbles ---------- */
+.hui_bubble { width: 87%; padding: 9px 13px 11px; border-radius: 14px; pointer-events: auto; cursor: text; user-select: text; -webkit-user-select: text; }
+.hui_bubble.is-fit { width: max-content; max-width: 87%; }
+.hui_bubble.is-ai {
+  background: rgba(255,255,255,.9);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15); backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.6), 0 6px 20px rgba(3,8,26,.14);
 }
-
-/* Static background ring */
-.home-hero_progress::before {
-  background: rgba(255, 255, 255, 0.35);
+.hui_bubble.is-user {
+  padding: 10px 13px 11px;
+  background: linear-gradient(160deg, rgba(93,102,111,.62) 0%, rgba(93,102,111,.44) 52%, rgba(93,102,111,.56) 100%);
+  -webkit-backdrop-filter: blur(10px) saturate(1.5); backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.32), inset 0 0 0 1px rgba(255,255,255,.15), inset 0 -8px 18px rgba(255,255,255,.06), 0 8px 22px rgba(3,8,26,.2);
 }
+.hui_text { margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; color: #1D1D22; }
+.hui_bubble.is-user .hui_text { color: #FFFFFF; }
+.hui_who { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.hui_who.is-loose { margin-bottom: 7px; }
+.hui_orb { position: relative; flex: 0 0 auto; width: 15px; height: 15px; border-radius: 999px; overflow: hidden; background: radial-gradient(120% 120% at 30% 25%, #7FD8E8 0%, #A8E85C 46%, #12A594 100%); box-shadow: 0 0 0 1px rgba(0,0,0,.07); }
+.hui_avatar { flex: 0 0 auto; width: 15px; height: 15px; border-radius: 999px; overflow: hidden; background: #205AE3; box-shadow: 0 0 0 1px rgba(0,0,0,.07); }
+.hui_avatar img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; }
+.hui_name { font-size: 11.5px; font-weight: 500; letter-spacing: -0.005em; color: #8A8F98; line-height: normal; }
+.hui_highlight { background-image: linear-gradient(90deg, rgba(110,155,242,.9), rgba(32,89,227,.95)); background-repeat: no-repeat; background-position: left center; background-size: 0% 100%; }
 
-/* Animated progress fill */
-.home-hero_progress::after {
-  background: conic-gradient(#fff calc(var(--hero-slide-progress) * 1turn), transparent 0);
+/* ---------- searching → answer morph ---------- */
+.hui_morph { position: relative; overflow: hidden; width: 100%; }
+.hui_morph-a, .hui_morph-b { position: absolute; left: 0; top: 0; width: max-content; will-change: opacity, transform; }
+.hui_morph-b { opacity: 0; }
+.hui_loading { display: flex; align-items: center; gap: 7px; }
+.hui_loading.is-wide { gap: 10px; }
+.hui_loading.is-report { gap: 8px; }
+.hui_loader { flex: 0 0 auto; display: block; width: 15px; height: 15px; }
+.hui_loader.is-16 { width: 16px; height: 16px; }
+.hui_loader.is-18 { width: 18px; height: 18px; }
+.hui_loader.is-dark { filter: brightness(0); opacity: .78; }
+.hui_loader.is-dark.is-16 { opacity: .8; }
+.hui_loader.is-light { filter: brightness(1.5); }
+.hui_loading-text { font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: #D9DCE4; white-space: nowrap; }
+.hui_loading-text.is-small { font-size: 12.5px; }
+
+.hui_gradient-pill { display: inline-flex; max-width: 100%; padding: 1px; border-radius: 11px; background: linear-gradient(103deg, #9B8AF0 0%, #7FA8EC 30%, #E4CBA8 66%, #F2A472 100%); }
+.hui_gradient-pill-inner { display: inline-flex; align-items: center; gap: 7px; min-width: 0; padding: 6px 10px 6px 8px; border-radius: 10px; background: #FFFFFF; }
+.hui_gradient-pill-inner.is-done { padding: 6px 11px 6px 8px; }
+.hui_pill-text { font-size: 12.5px; font-weight: 500; letter-spacing: -0.005em; color: #1D1D22; text-wrap: pretty; }
+.hui_pill-text.is-success { font-weight: 600; color: #0B7F52; }
+.hui_check-ring { flex: 0 0 auto; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 999px; background: #0EA963; }
+
+/* ---------- dark glass panels ---------- */
+.hui_panel {
+  width: 100%; border-radius: 14px;
+  background: rgba(20,22,32,.46); border: 1px solid rgba(255,255,255,.17);
+  -webkit-backdrop-filter: blur(30px) saturate(165%); backdrop-filter: blur(30px) saturate(165%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.11), 0 22px 48px rgba(6,6,12,.26);
+  pointer-events: auto; cursor: text; user-select: text; -webkit-user-select: text;
 }
+.hui_panel.is-assist { display: flex; flex-direction: column; gap: 11px; padding: 14px 15px 13px; border-radius: 13px; }
+.hui_panel.is-spike { padding: 12px 14px; }
+.hui_panel.is-analyst { border-radius: 15px; }
+.hui_panel.is-share { padding: 11px 14px 12px; }
 
-/* ============================================================
-   RESPONSIVE — SIMPLIFIED TABLET / MOBILE SLIDER
-   ============================================================ */
+.hui_panel-title { display: flex; align-items: center; gap: 9px; color: #F2F3F6; font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em; line-height: normal; }
+.hui_panel-title svg { flex: 0 0 auto; }
+.hui_panel-title.is-inline { flex: 0 0 auto; white-space: nowrap; }
+.hui_panel-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; min-height: 26px; }
+.hui_query { margin: 0; font-size: 12.5px; line-height: 1.45; letter-spacing: -0.005em; color: #D5D9E2; text-wrap: pretty; }
 
-@media screen and (max-width: 991px) {
-  .hero-ui_automate-column,
-  .hero-ui_augment-column.is-left,
-  .hero-ui_augment-column.is-right,
-  .hero-ui_analyze-column {
-    transform: none;
-  }
+/* gradient hairline boxes */
+.hui_glow { position: relative; padding: 11px 12px; border-radius: 11px; background: rgba(255,255,255,.10); }
+.hui_glow::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, #93DEFD, #AE95DD 45%, #FCB56C);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
 }
+.hui_glow.is-report { padding: 11px 12px 12px; }
+.hui_glow.is-chip { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,.14); }
+.hui_glow.is-chip svg { flex: 0 0 auto; }
 
-@media screen and (max-width: 767px) {
-  .home-hero_media {
-    --hero-ui-bottom: 1rem;
-    --hero-ui-progress-size: 1.5rem;
-    --hero-ui-gap: 1rem;
-  }
+.hui_stack { display: flex; flex-direction: column; }
+.hui_stack.is-9 { gap: 9px; }
+.hui_stack.is-10 { gap: 10px; }
+.hui_answer { margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; color: #EDEFF4; text-wrap: pretty; }
+.hui [data-tk] { opacity: 0; }
+.hui_caret { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: -0.12em; opacity: 0; font-style: normal; }
+.hui_caret b { position: absolute; left: 1px; bottom: 0; display: block; width: 1.5px; height: 1.02em; border-radius: 1px; background: #EDEFF4; }
+.hui_divider { height: 1px; background: rgba(255,255,255,.14); }
+.hui_divider.is-report { margin-bottom: 11px; }
+.hui_divider.is-share { margin: 10px 0 11px; }
+.hui_sources { display: flex; align-items: center; flex-wrap: nowrap; gap: 7px; min-width: 0; }
+.hui_meta { flex: 0 0 auto; font-size: 11.5px; font-weight: 500; color: #B1BAC4; line-height: normal; }
+.hui_source { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; padding: 3px 8px; border-radius: 8px; background: rgba(255,255,255,.13); color: #E9ECF2; font-size: 11px; font-weight: 500; line-height: normal; }
+.hui_source.is-shrink { flex: 0 1 auto; min-width: 0; }
+.hui_source svg { flex: 0 0 auto; }
+.hui_ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hui_nowrap { white-space: nowrap; }
+.hui_context { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.hui_context-chip { display: flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; padding: 4px 9px; border-radius: 999px; background: rgba(252,181,108,.15); border: 1px solid rgba(252,181,108,.30); color: #E9ECF2; font-size: 11px; font-weight: 500; line-height: normal; }
+.hui_context-dot { flex: 0 0 auto; width: 5px; height: 5px; border-radius: 999px; background: #FCB56C; }
+.hui_field { display: flex; flex-direction: column; gap: 2px; }
+.hui_label { font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: rgba(213,217,226,.62); line-height: normal; }
+.hui_value { font-size: 13px; line-height: 1.45; letter-spacing: -0.005em; color: #EDEFF4; }
 
-  .home-hero_progress {
-    left: 16px !important;
-    bottom: 16px !important;
-  }
+/* claim pill */
+.hui_claim { flex: 0 0 auto; margin-left: auto; display: grid; justify-items: end; opacity: 0; transform: scale(.32); transform-origin: 100% 50%; }
+.hui_claim-state { grid-area: 1 / 1; display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 999px; background: rgba(255,255,255,.10); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.hui_claim-state.is-done { opacity: 0; }
+.hui_claim-text { font-size: 11px; font-weight: 600; letter-spacing: -0.005em; color: #E7E9F0; white-space: nowrap; line-height: normal; }
+.hui_claim-text.is-done { color: #FFFFFF; }
+.hui_claim-check { flex: 0 0 auto; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 999px; background: #22C55E; }
 
-  .hero-ui_automate-column,
-  .hero-ui_augment-column.is-left,
-  .hero-ui_augment-column.is-right,
-  .hero-ui_analyze-column {
-    bottom: 64px;
-    max-width: none;
-    transform: none;
-  }
+/* ---------- analyze ---------- */
+.hui_spike-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(239,68,68,.20); margin-bottom: 10px; }
+.hui_spike-dot { width: 6px; height: 6px; border-radius: 999px; background: #EF4444; }
+.hui_spike-text { font-size: 10.5px; font-weight: 600; letter-spacing: -0.005em; color: #FCA5A5; line-height: normal; }
+.hui_spike-title { font-size: 15.5px; font-weight: 500; letter-spacing: -0.02em; color: #F2F3F6; line-height: normal; }
+.hui_spike-sub { font-size: 12px; letter-spacing: -0.005em; color: #B1BAC4; margin-top: 3px; line-height: normal; }
+.hui_chart { display: block; width: 100%; height: auto; aspect-ratio: 300 / 50; margin-top: 8px; overflow: visible; }
+.hui_chart-axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; letter-spacing: -0.005em; color: #9AA3AE; line-height: normal; }
 
-  /* Automate: use almost the full slide width. */
-  .hero-ui_automate-column {
-    right: 4%;
-    width: 88%;
-    height: 70%;
-  }
+.hui_ask { display: flex; align-items: center; gap: 12px; padding: 10px 11px 10px 14px; }
+.hui_ask-text { margin: 0; flex: 1 1 auto; font-size: 13px; line-height: 1.45; letter-spacing: -0.005em; text-wrap: pretty; color: #FFFFFF; }
+.hui_ask-btn { flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #205AE3; }
+.hui_grow { height: 0; overflow: hidden; opacity: 0; will-change: height, opacity; }
+.hui_grow-in { padding: 0 14px 13px; }
+.hui_report-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.hui_report-title { flex: 1 1 auto; min-width: 0; font-size: 13.5px; font-weight: 500; letter-spacing: -0.01em; color: #F2F3F6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: normal; }
+.hui_share-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px; background: rgba(255,255,255,.13); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: #DCE6FB; line-height: normal; }
+.hui_report-body { margin-top: 11px; }
+.hui_stat { display: flex; align-items: center; gap: 12px; }
+.hui_stat-num { font-size: 30px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; color: #F5F6F9; }
+.hui_stat-bar { flex: 1 1 auto; display: block; height: 20px; border-radius: 6px; background: rgba(255,255,255,.16); overflow: hidden; }
+.hui_stat-fill { display: block; width: 70%; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #6E9BF2, #205AE3); clip-path: inset(0 100% 0 0 round 6px); }
+html.wf-design-mode .hui_stat-fill { clip-path: none; }
+.hui_stat-text { margin: 10px 0 0; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; color: #E4E7EE; }
 
-  .hero-ui_automate .hero-ui_message.is-agent {
-    right: 6%;
-    width: 94%;
-  }
+.hui_share-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hui_team { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 999px; background: rgba(255,255,255,.10); }
+.hui_team-dot { width: 17px; height: 17px; border-radius: 999px; background: rgba(255,255,255,.3); }
+.hui_team-name { white-space: nowrap; font-size: 12px; font-weight: 500; letter-spacing: -0.01em; color: #EDEFF4; line-height: normal; }
+.hui_note { margin: 0; min-height: 3em; font-size: 13px; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; color: #EDEFF4; }
+.hui_note.is-second { margin-top: 3px; }
+.hui_share-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.hui_chip-text { min-width: 0; font-size: 9.5px; font-weight: 600; letter-spacing: .02em; color: #F5F6F9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: normal; }
+.hui_send-wrap { flex: 0 0 auto; display: grid; justify-items: end; }
+.hui_send-btn { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 999px; background: #205AE3; font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: #FFFFFF; line-height: normal; }
+.hui_sent { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 5px; border-radius: 999px; background: rgba(34,197,94,.18); box-shadow: inset 0 0 0 1px rgba(34,197,94,.34); opacity: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: #86EFAC; white-space: nowrap; line-height: normal; }
+.hui_sent-check { flex: 0 0 auto; display: grid; place-items: center; width: 19px; height: 19px; border-radius: 999px; background: #22C55E; }
+.hui_sent-check svg { display: block; }
 
-  .hero-ui_automate .hero-ui_message.is-customer {
-    max-width: 82%;
-  }
+.hui_ripple { position: absolute; left: 0; top: 0; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 999px; border: 2px solid rgba(255,255,255,.9); box-shadow: 0 0 10px rgba(255,255,255,.35); opacity: 0; visibility: hidden; will-change: transform, opacity; }
+.hui_cursor { position: absolute; left: 0; top: 0; width: 22px; height: 24px; visibility: hidden; will-change: transform; filter: drop-shadow(0 3px 6px rgba(3,8,26,.4)); }
 
-  /* Augment: JS runs this as one sequential mobile story.
-     Both physical columns use the same lane; only one stage is
-     visible at a time, so there is no cross-column overlap. */
-  .hero-ui_augment-column.is-left,
-  .hero-ui_augment-column.is-right {
-    left: 4%;
-    right: auto;
-    width: 92%;
-    height: 74%;
-    transform-origin: left bottom;
-  }
+/* ---------- shared bits for the new widgets ---------- */
+.hui_row.is-center { justify-content: center; }
+.hui_group { width: 100%; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+.hui_group.is-start { align-items: flex-start; }
+.hui_stamp { align-self: center; padding: 3px 10px; border-radius: 8px; background: rgba(20,22,32,.5); border: 1px solid rgba(255,255,255,.15); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); font-family: "DM Mono", ui-monospace, monospace; font-size: 10.5px; line-height: normal; letter-spacing: .08em; text-transform: uppercase; color: #F2F3F6; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hui_head { display: flex; align-items: center; gap: 7px; }
+.hui_status { margin-left: auto; display: grid; justify-items: end; align-items: center; }
+.hui_status-load, .hui_status-done { grid-area: 1 / 1; display: flex; align-items: center; gap: 5px; border-radius: 6px; font-size: 10.5px; line-height: normal; white-space: nowrap; }
+.hui_status-load { padding: 1px 7px; background: rgba(11,11,11,.06); font-weight: 500; color: #5A606B; }
+.hui_status-done { padding: 1px 7px 1px 3px; font-weight: 600; opacity: 0; }
+.hui_status-done.is-mail { background: rgba(34,197,94,.14); color: #0B7A3B; }
+.hui_status-done.is-sms { background: rgba(14,169,99,.12); color: #0B7F52; }
+.hui_status-ring { flex: 0 0 auto; display: grid; place-items: center; width: 13px; height: 13px; border-radius: 999px; background: #22C55E; transform: scale(.32); }
+.hui_status-done.is-sms .hui_status-ring { background: #0EA963; }
+.hui_skel { grid-area: 1 / 1; display: block; height: 7px; border-radius: 4px; background: rgba(11,11,11,.09); }
+.hui_cell { display: grid; align-items: center; }
+.hui_cell > * { grid-area: 1 / 1; }
+.hui_orb-blue { position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 999px; overflow: hidden; background: #5B86FF; box-shadow: 0 0 10px 2px rgba(64,110,240,.55); pointer-events: none; will-change: transform; }
+.hui_orb-blue.is-18 { width: 18px; height: 18px; opacity: 0; z-index: 3; }
+.hui_orb-spin { position: absolute; inset: -30%; background: conic-gradient(from 0deg, #5B86FF, #34D1BF, #FFB547, #A77BFF, #5B86FF); filter: blur(2px); }
+.hui_orb-shine { position: absolute; inset: 0; border-radius: 999px; background: radial-gradient(55% 45% at 32% 24%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 62%); }
+.hui_orb-rim { position: absolute; inset: 0; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), inset 0 -4px 7px rgba(4,8,24,.4); }
+.hui_orb-trail { position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 999px; background: radial-gradient(circle, rgba(110,165,255,.85) 0%, rgba(91,134,255,.35) 55%, rgba(91,134,255,0) 75%); filter: blur(5px); opacity: 0; pointer-events: none; will-change: transform, opacity; }
 
-  .hero-ui_augment-column.is-left [data-ui-message],
-  .hero-ui_augment-column.is-right .hero-ui_assist-card {
-    width: 100%;
-    max-width: 100%;
-  }
+/* email card (Automate) */
+.hui_mail { position: relative; width: 87%; min-width: 210px; display: flex; flex-direction: column; gap: 8px; padding: 10px 11px 11px; }
+.hui_env { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 9px; border-radius: 10px; background: rgba(11,11,11,.035); border: 1px solid rgba(11,11,11,.07); overflow: hidden; will-change: transform; }
+.hui_env-to { display: flex; align-items: baseline; gap: 6px; min-width: 0; opacity: 0; }
+.hui_env-key { flex: 0 0 auto; font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: #8A8F98; line-height: normal; }
+.hui_env-val { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; letter-spacing: -0.005em; color: #1D1D22; line-height: normal; }
+.hui_env-subject { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: #1D1D22; opacity: 0; line-height: normal; }
+.hui_env-link { display: flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 8px; background: rgba(32,90,227,.08); border: 1px solid rgba(32,90,227,.22); color: #205AE3; font-size: 11.5px; font-weight: 500; white-space: nowrap; opacity: 0; line-height: normal; }
+.hui_env-sweep { position: absolute; top: 0; bottom: 0; left: 0; width: 45%; background: linear-gradient(90deg, rgba(32,90,227,0), rgba(32,90,227,.10), rgba(32,90,227,0)); opacity: 0; pointer-events: none; will-change: transform, opacity; }
 
-  .hero-ui_augment-column.is-left .hero-ui_message.is-customer {
-    width: auto;
-    max-width: 84%;
-  }
+/* upload card (Automate) */
+.hui_up { position: relative; width: 68%; min-width: 184px; display: flex; flex-direction: column; gap: 8px; padding: 10px 11px 11px; }
+.hui_up-name { font-size: 11.5px; font-weight: 500; letter-spacing: -0.005em; color: rgba(255,255,255,.82); line-height: normal; }
+.hui_up-zone { position: relative; display: grid; min-height: 58px; padding: 9px 10px; border-radius: 10px; border: 1.5px dashed rgba(255,255,255,.42); background: rgba(255,255,255,.06); }
+.hui_up-zone > * { grid-area: 1 / 1; }
+.hui_up-prompt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #FFFFFF; font-size: 12px; letter-spacing: -0.005em; text-align: center; line-height: normal; }
+.hui_up-file-list { display: flex; flex-direction: column; gap: 7px; opacity: 0; }
+.hui_up-file-row { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.hui_up-file { flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 28px; border-radius: 5px; background: rgba(255,255,255,.16); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); color: #FFFFFF; }
+.hui_up-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.hui_up-line { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; letter-spacing: -0.005em; color: #FFFFFF; line-height: normal; }
+.hui_up-pct { flex: 0 0 auto; font-size: 11px; color: rgba(255,255,255,.78); font-variant-numeric: tabular-nums; }
+.hui_up-track { position: relative; display: block; height: 4px; border-radius: 4px; background: rgba(255,255,255,.2); overflow: hidden; }
+.hui_up-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 4px; background: #FFFFFF; transform-origin: 0 50%; transform: scaleX(0); }
+.hui_up-state { display: grid; align-items: center; min-height: 16px; }
+.hui_up-state > * { grid-area: 1 / 1; }
+.hui_up-load { font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,.82); line-height: normal; }
+.hui_up-done { display: flex; align-items: center; gap: 7px; opacity: 0; font-size: 11.5px; font-weight: 600; letter-spacing: -0.005em; color: #FFFFFF; line-height: normal; }
+.hui_up-ring { flex: 0 0 auto; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 999px; background: #0EA963; }
+.hui_up-ghost { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 2; pointer-events: none; opacity: 0; will-change: transform, opacity; }
+.hui_up-chip { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 8px; background: rgba(255,255,255,.95); box-shadow: 0 10px 24px rgba(3,8,26,.3); color: #1D1D22; font-size: 11.5px; font-weight: 500; letter-spacing: -0.005em; white-space: nowrap; transform: translate(-50%,-50%); line-height: normal; }
+.hui_up-cursor { position: absolute; left: 20px; top: 4px; overflow: visible; filter: drop-shadow(0 2px 3px rgba(3,8,26,.35)); }
 
-  /* Analyze */
-  .hero-ui_analyze-column {
-    left: 4%;
-    width: 92%;
-    height: 74%;
-  }
+/* Deputy Agent form (light in Automate, dark in Augment) */
+.hui_dep { position: relative; display: flex; flex-direction: column; gap: 11px; padding: 14px 15px 13px; }
+.hui_dep.is-light { width: 72%; min-width: 220px; max-width: 280px; }
+.hui_dep-title { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em; color: #1D1D22; line-height: normal; }
+.hui_panel .hui_dep-title { color: #F2F3F6; }
+.hui_dep-home { flex: 0 0 auto; width: 16px; height: 16px; }
+.hui_dep-task { margin: 0; font-size: 12.5px; line-height: 1.45; letter-spacing: -0.005em; color: #5A606B; text-wrap: pretty; }
+.hui_panel .hui_dep-task { color: #D5D9E2; }
+.hui_dep-tiles { display: flex; flex-direction: column; gap: 6px; }
+.hui_dep-tile { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 8px 34px 9px 10px; border-radius: 10px; background: rgba(11,11,11,.035); border: 1px solid rgba(11,11,11,.07); min-width: 0; }
+.hui_panel .hui_dep-tile { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.11); }
+.hui_dep-key { font-size: 10.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: #8A8F98; line-height: normal; }
+.hui_panel .hui_dep-key { color: rgba(213,217,226,.62); }
+.hui_dep-cell { display: grid; min-height: 19px; align-items: center; justify-items: start; }
+.hui_dep-cell > * { grid-area: 1 / 1; }
+.hui_dep-skel { display: block; height: 8px; border-radius: 4px; background: rgba(11,11,11,.09); }
+.hui_panel .hui_dep-skel { background: rgba(255,255,255,.12); }
+.hui_dep-await { display: flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: 8px; background: rgba(252,181,108,.16); border: 1px solid rgba(232,140,48,.38); color: #9A4F06; font-size: 11.5px; font-weight: 500; white-space: nowrap; line-height: normal; }
+.hui_dep-await-dot { flex: 0 0 auto; width: 5px; height: 5px; border-radius: 999px; background: #E88C30; }
+.hui_dep-val { font-size: 13px; line-height: 1.45; letter-spacing: -0.005em; color: #1D1D22; font-variant-numeric: tabular-nums; opacity: 0; min-width: 0; text-wrap: pretty; }
+.hui_panel .hui_dep-val { color: #EDEFF4; }
+.hui_dep-sub { font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: #5A606B; opacity: 0; line-height: normal; }
+.hui_dep-done { display: flex; align-items: center; gap: 7px; min-width: 0; opacity: 0; font-size: 13px; font-weight: 600; letter-spacing: -0.005em; color: #0B7A3B; line-height: normal; }
+.hui_dep-ring { flex: 0 0 auto; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 999px; background: #22C55E; }
+/* Augment: status pill sits in the title row */
+.hui_dep-status { flex: 0 1 auto; min-width: 0; margin-left: auto; display: grid; justify-items: end; min-height: 22px; align-items: center; }
+.hui_dep-status > * { grid-area: 1 / 1; }
+.hui_dep-status .hui_dep-sub { padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.10); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); font-size: 11px; color: #D9DCE4; white-space: nowrap; }
+.hui_dep-status .hui_dep-done { gap: 6px; padding: 3px 10px 3px 4px; border-radius: 999px; background: rgba(255,255,255,.10); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); font-size: 11px; color: #FFFFFF; white-space: nowrap; }
 
-  /* Increase UI readability instead of scaling the whole canvas. */
-  .hero-ui_message-text {
-    font-size: 13px;
-  }
-  .hero-ui_agent-name {
-    font-size: 10px;
-  }
-  .hero-ui_agent-orb,
-  .hero-ui_agent-avatar {
-    width: 15px;
-    height: 15px;
-  }
-  .hero-ui_status-pill {
-    font-size: 10px;
-    padding: 6px 8px;
-  }
-  .hero-ui_assist-card {
-    padding: 13px;
-  }
-  .hero-ui_assist-heading {
-    font-size: 12px;
-  }
-  .hero-ui_assist-question,
-  .hero-ui_result-text {
-    font-size: 11px;
-  }
-  .hero-ui_sources-label,
-  .hero-ui_context-label {
-    font-size: 9px;
-  }
-  .hero-ui_source-pill,
-  .hero-ui_context-pill {
-    font-size: 9px;
-  }
-  .hero-ui_summary-label {
-    font-size: 8px;
-  }
-  .hero-ui_summary-value {
-    font-size: 10px;
-  }
-  .hero-ui_analyze-title {
-    font-size: 12px;
-  }
-  .hero-ui_analyze-subtitle {
-    font-size: 9px;
-  }
-  .hero-ui_analyze-prompt .hero-ui_type-text {
-    font-size: 10px;
-  }
-  .hero-ui_report-title {
-    font-size: 10px;
-  }
-  .hero-ui_insight-description {
-    font-size: 9px;
-  }
-  .hero-ui_share-message {
-    font-size: 9px;
-  }
-}
+/* SMS bubble (Automate) */
+.hui_sms { will-change: transform; }
+.hui_sms-plane { flex: 0 0 auto; display: grid; place-items: center; width: 16px; height: 16px; color: #205AE3; will-change: transform, opacity; }
 
-@media screen and (max-width: 479px) {
-  .hero-ui_automate-column {
-    right: 3%;
-    width: 94%;
-  }
-
-  .hero-ui_augment-column.is-left,
-  .hero-ui_augment-column.is-right,
-  .hero-ui_analyze-column {
-    left: 3%;
-    width: 94%;
-  }
-}
+/* ---------- Designer preview (scripts don't run in the Designer) ---------- */
+html.wf-design-mode .hui_col { display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding-bottom: 24px; }
+html.wf-design-mode .hui_col.is-aug-right { justify-content: flex-start; padding-top: 24px; }
+html.wf-design-mode .hui_row { position: relative; visibility: visible; }
+html.wf-design-mode .hui_morph { height: auto !important; }
+html.wf-design-mode .hui_morph-b { display: none; }
+html.wf-design-mode .hui_morph-a { position: relative; }
