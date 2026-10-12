@@ -5,6 +5,11 @@
 
 /* ---------- page / slider ---------- */
 html, body { overflow-x: clip; }
+/* desktop: no elastic bounce past the top / bottom of the page. The slider is pinned (fixed)
+   from scroll 0, so a bounce dragged the headline down over it. Phones keep pull-to-refresh. */
+@media (min-width: 992px) {
+  html, body { overscroll-behavior-y: none; }
+}
 .home-hero_slider, .home-hero_track, .home-hero_slide { will-change: transform; }
 
 /* ---------- intro ---------- */
